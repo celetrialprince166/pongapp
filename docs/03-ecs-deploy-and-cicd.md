@@ -158,7 +158,10 @@ aws ecs wait tasks-stopped --cluster "$CLUSTER" --tasks "$TASK_ARN"
 # ... abort if exitCode != 0 ...
 ```
 
-<!-- TODO: add GitHub Actions screenshot — the green deploy.yml run (add when the browser is authenticated to GitHub) -->
+A green pipeline run end-to-end — both image builds plus the migrate-and-deploy
+job, pushed to `main`, completing in ~11 minutes with keyless OIDC:
+
+![GitHub Actions — deploy.yml run: build frontend + backend, migrate & deploy to ECS, all green](assets/p3-github-actions-deploy-run.png)
 
 ## Verification
 
