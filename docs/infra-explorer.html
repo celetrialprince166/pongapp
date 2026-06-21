@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pongapp — Infrastructure Explorer</title>
+<style>
+  :root{
+    --ground:#0B1220; --surface:#121D2E; --surface2:#0F1826; --line:#22324a;
+    --text:#E7EEF7; --muted:#8A9BB4; --faint:#56688200;
+    --build:#FFB020;        /* terraform / provision-time */
+    --run:#34D8C0;          /* live traffic / runtime */
+    --c-net:#6F8DB0; --c-img:#FFB020; --c-sec:#C084FC; --c-data:#4ADE80;
+    --c-dns:#34D8C0; --c-iam:#FB7185; --c-lb:#5B9DF9; --c-cluster:#F0883E;
+    --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--text);font-family:var(--sans);line-height:1.5;
+    background-image:radial-gradient(1100px 600px at 82% -10%,rgba(52,216,192,.08),transparent 60%),
+      radial-gradient(900px 520px at 4% 2%,rgba(255,176,32,.07),transparent 55%),
+      linear-gradient(#16243710 1px,transparent 1px),linear-gradient(90deg,#16243710 1px,transparent 1px);
+    background-size:auto,auto,36px 36px,36px 36px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px 110px}
+  a{color:var(--run)}
+
+  /* hero */
+  header.hero{padding:64px 0 28px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--build);
+    display:flex;align-items:center;gap:10px}
+  .eyebrow i{width:9px;height:9px;border-radius:2px;display:inline-block}
+  h1{font-size:clamp(30px,5vw,54px);line-height:1.03;letter-spacing:-.02em;margin:18px 0 0;max-width:18ch;font-weight:750}
+  h1 .b{color:var(--build)} h1 .r{color:var(--run)}
+  .lede{margin:18px 0 0;max-width:64ch;color:var(--muted);font-size:17px}
+  .lede b{color:var(--text);font-weight:600}
+
+  /* mode toggle */
+  .modebar{display:flex;gap:10px;align-items:center;margin:30px 0 8px;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:4px;gap:4px}
+  .seg button{font-family:var(--mono);font-size:12.5px;border:0;background:transparent;color:var(--muted);
+    padding:8px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.18s}
+  .seg button .dot{width:8px;height:8px;border-radius:50%}
+  .seg button.active{color:var(--ground);font-weight:700}
+  .seg button[data-mode="build"].active{background:var(--build)}
+  .seg button[data-mode="run"].active{background:var(--run)}
+  .modehint{font-size:13px;color:var(--muted)}
+
+  /* section heads */
+  .sec{display:flex;align-items:baseline;gap:13px;margin:64px 0 8px;border-bottom:1px solid var(--line);padding-bottom:12px}
+  .sec .n{font-family:var(--mono);color:var(--build);font-size:13px;letter-spacing:.1em}
+  .sec h2{font-size:20px;margin:0;font-weight:650}
+  .sec .h{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  .subnote{color:var(--muted);font-size:14.5px;margin:14px 0 0;max-width:74ch}
+
+  /* graph layout */
+  .graphwrap{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:22px}
+  .canvas{position:relative;background:linear-gradient(180deg,#0e1828,#0b1220);border:1px solid var(--line);
+    border-radius:16px;overflow:hidden;min-height:560px}
+  svg{display:block;width:100%;height:auto}
+  .legendrow{display:flex;flex-wrap:wrap;gap:10px 16px;padding:12px 16px;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .legendrow span{display:inline-flex;align-items:center;gap:7px}
+  .legendrow i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+  /* edges */
+  .edge{fill:none;stroke-width:1.6;opacity:.34;transition:opacity .2s,stroke-width .2s}
+  .edge.flow{stroke-dasharray:5 7;animation:dash 1.1s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-24}}
+  .edge.dim{opacity:.06}
+  .edge.hot{opacity:1;stroke-width:2.8}
+  .e-net{stroke:var(--c-net)} .e-img{stroke:var(--c-img)} .e-sec{stroke:var(--c-sec)}
+  .e-data{stroke:var(--c-data)} .e-dns{stroke:var(--c-dns)} .e-iam{stroke:var(--c-iam)}
+  .e-lb{stroke:var(--c-lb)} .e-cluster{stroke:var(--c-cluster)}
+
+  /* nodes */
+  .node{cursor:pointer}
+  .node rect{fill:#152136;stroke:#2b3e5a;stroke-width:1.4;transition:.18s}
+  .node:hover rect,.node.sel rect{stroke:var(--build);filter:drop-shadow(0 0 10px rgba(255,176,32,.35))}
+  .node .nm{fill:var(--text);font-family:var(--mono);font-size:12.5px;font-weight:600}
+  .node .ty{fill:var(--muted);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em}
+  .node .ic{font-size:15px}
+  .node.dim{opacity:.32}
+  body.run .node.runoff{opacity:.18}
+  body.run .node rect{stroke:#2b3e5a}
+  body.run .node.runon rect{stroke:var(--run);filter:drop-shadow(0 0 12px rgba(52,216,192,.4))}
+
+  /* detail panel */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:0;overflow:hidden;
+    align-self:start;position:sticky;top:14px}
+  .panel .ph{padding:16px 18px;border-bottom:1px solid var(--line);background:var(--surface2)}
+  .panel .ph .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--build)}
+  .panel .ph h3{margin:6px 0 0;font-family:var(--mono);font-size:16px;font-weight:650}
+  .panel .ph p{margin:8px 0 0;font-size:13px;color:var(--muted)}
+  .panel .body{padding:16px 18px;max-height:540px;overflow:auto}
+  .panel h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+    margin:18px 0 8px}
+  .panel h4:first-child{margin-top:0}
+  .res{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px;background:var(--surface2)}
+  .res .r1{font-family:var(--mono);font-size:12px;color:var(--build)}
+  .res .r2{font-size:12px;color:var(--muted);margin-top:3px}
+  .res .r2 code{font-family:var(--mono);color:var(--text);font-size:11px}
+  .flowitem{display:flex;gap:9px;font-size:12.5px;margin:6px 0;align-items:flex-start}
+  .flowitem .ar{font-family:var(--mono);flex:0 0 auto}
+  .flowitem.inb .ar{color:var(--c-data)} .flowitem.outb .ar{color:var(--build)}
+  .flowitem b{color:var(--text)}
+  .why{font-size:13px;color:var(--text);background:rgba(52,216,192,.06);border-left:2px solid var(--run);
+    padding:10px 12px;border-radius:0 8px 8px 0}
+  .empty{color:var(--faint);font-size:13px;text-align:center;padding:40px 10px;font-family:var(--mono)}
+
+  /* runtime flow controls */
+  .flowctl{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--text);
+    padding:9px 16px;border-radius:9px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;transition:.16s}
+  .btn:hover{border-color:var(--run)}
+  .btn.primary{background:var(--run);color:var(--ground);border-color:var(--run);font-weight:700}
+  .stepcap{font-family:var(--mono);font-size:13px;color:var(--run);min-height:20px}
+
+  /* cloud map deep dive */
+  .cmtabs{display:flex;gap:8px;margin:20px 0 16px}
+  .cmtabs button{font-family:var(--mono);font-size:13px;border:1px solid var(--line);background:var(--surface2);
+    color:var(--muted);padding:9px 16px;border-radius:9px;cursor:pointer}
+  .cmtabs button.active{background:var(--c-dns);color:var(--ground);font-weight:700;border-color:var(--c-dns)}
+  .cmgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+  .cmstage{background:linear-gradient(180deg,#0e1828,#0b1220);border:1px solid var(--line);border-radius:14px;
+    padding:18px;min-height:330px;position:relative}
+  .cmcode{background:#0a111d;border:1px solid var(--line);border-radius:14px;padding:0;overflow:hidden}
+  .cmcode .ch{font-family:var(--mono);font-size:11px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between}
+  .cmcode pre{margin:0;padding:14px;font-family:var(--mono);font-size:11.5px;line-height:1.65;overflow:auto;color:#cdd9ea}
+  .cmcode .k{color:var(--c-dns)} .cmcode .s{color:var(--build)} .cmcode .c{color:#5b6b82}
+  .cmsteps{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .cmstep{display:flex;gap:11px;font-size:13px;color:var(--muted);opacity:.45;transition:.3s}
+  .cmstep.on{opacity:1;color:var(--text)}
+  .cmstep .num{font-family:var(--mono);color:var(--c-dns);flex:0 0 auto;font-weight:700}
+  .qa{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+  .qa div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .qa .q{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--c-dns)}
+  .qa .a{font-size:13px;margin-top:7px;color:var(--text)}
+  .qa .a code{font-family:var(--mono);font-size:11.5px;color:var(--build)}
+
+  /* blue green stepper */
+  .bg{display:flex;gap:0;margin-top:20px;overflow-x:auto;padding-bottom:8px}
+  .bgs{flex:1;min-width:150px;border-top:3px solid var(--line);padding:14px 14px 0;position:relative}
+  .bgs.done{border-color:var(--build)} .bgs.green{border-color:var(--run)}
+  .bgs .bn{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .bgs .bt{font-size:13.5px;font-weight:600;margin:6px 0 4px}
+  .bgs .bd{font-size:12px;color:var(--muted)}
+
+  @media(max-width:900px){.graphwrap{grid-template-columns:1fr}.cmgrid{grid-template-columns:1fr}.qa{grid-template-columns:1fr}
+    .panel{position:static}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow"><i style="background:var(--build)"></i><i style="background:var(--run)"></i> pongapp · terraform on aws ecs</div>
+    <h1>How the <span class="b">infrastructure</span> fits together — and how a <span class="r">request</span> flows through it.</h1>
+    <p class="lede">Eleven Terraform modules provision the ECS stack. Click any module to see its
+      <b>resources</b>, key <b>config</b>, what it <b>consumes</b>, and what it <b>hands to others</b> — then flip to
+      <b>runtime</b> to watch a real request travel from the load balancer to the database. The deep dive on
+      <b>Cloud Map</b> shows exactly who registers, who resolves, and why.</p>
+
+    <div class="modebar">
+      <div class="seg" id="modeseg">
+        <button data-mode="build" class="active"><span class="dot" style="background:var(--build)"></span>Build-time · Terraform</button>
+        <button data-mode="run"><span class="dot" style="background:var(--run)"></span>Runtime · Request flow</button>
+      </div>
+      <span class="modehint" id="modehint">Module dependency graph — amber edges carry Terraform outputs between modules.</span>
+    </div>
+  </header>
+
+  <!-- ===== MODULE GRAPH ===== -->
+  <div class="sec"><span class="n">01</span><h2>The module graph</h2><span class="h">infra/terraform/modules</span></div>
+  <div class="graphwrap">
+    <div>
+      <div class="canvas">
+        <svg id="svg" viewBox="0 0 960 600" role="img" aria-label="Terraform module dependency graph"></svg>
+        <div class="legendrow" id="legend"></div>
+      </div>
+      <div class="flowctl" id="runctl" style="display:none">
+        <button class="btn primary" id="playBtn">▶ Play a request</button>
+        <button class="btn" id="resetBtn">↺ Reset</button>
+        <span class="stepcap" id="stepcap">Press play to trace a request end-to-end.</span>
+      </div>
+    </div>
+    <aside class="panel">
+      <div class="ph"><div class="tag" id="pTag">select a module</div><h3 id="pName">Infrastructure map</h3><p id="pPurpose">Hover to highlight dependencies; click to inspect a module in depth.</p></div>
+      <div class="body" id="pBody"><div class="empty">◆ click a node</div></div>
+    </aside>
+  </div>
+
+  <!-- ===== CLOUD MAP DEEP DIVE ===== -->
+  <div class="sec"><span class="n">02</span><h2>Cloud Map, in depth</h2><span class="h">service discovery</span></div>
+  <p class="subnote">The frontend never knows a backend IP. It asks DNS for <code style="font-family:var(--mono);color:var(--run)">backend.pongapp.local</code> every few seconds, and AWS Cloud Map answers with the live IPs of healthy backend tasks. Two halves make that work — <b>registration</b> (ECS puts tasks into Cloud Map) and <b>resolution</b> (nginx pulls them out).</p>
+
+  <div class="cmtabs" id="cmtabs">
+    <button data-cm="reg" class="active">① Registration — how IPs get in</button>
+    <button data-cm="res">② Resolution — how nginx gets them out</button>
+  </div>
+  <div class="cmgrid">
+    <div class="cmstage"><svg id="cmsvg" viewBox="0 0 460 300" aria-label="Cloud Map animation"></svg></div>
+    <div>
+      <div class="cmcode"><div class="ch"><span id="cmFile">modules/ecs-service/main.tf</span><span id="cmTag" style="color:var(--c-dns)">terraform</span></div><pre id="cmCode"></pre></div>
+      <div class="cmsteps" id="cmSteps"></div>
+    </div>
+  </div>
+  <div class="qa">
+    <div><div class="q">Who calls it?</div><div class="a">The <b>frontend nginx</b> (<code>proxy_pass http://$backend_upstream</code>) for every <code>/api</code>, <code>/ws</code>, <code>/media</code>, <code>/static</code> request.</div></div>
+    <div><div class="q">Where is it configured?</div><div class="a"><code>modules/cloudmap</code> creates the namespace; <code>modules/ecs-service</code> creates the service + registers the backend via <code>service_registries</code>.</div></div>
+    <div><div class="q">Why not an ALB?</div><div class="a">East-west traffic stays internal — <b>no per-LB hourly cost</b>, lower latency, and ECS reports task health directly. The public ALB is reserved for the frontend edge.</div></div>
+  </div>
+
+  <!-- ===== BLUE/GREEN ===== -->
+  <div class="sec"><span class="n">03</span><h2>Blue / green deploy path</h2><span class="h">ECS-native · CI/CD</span></div>
+  <p class="subnote">A push to <code>main</code> runs the pipeline. The frontend uses <b>ECS-native blue/green</b> (<code>deployment_configuration { strategy = "BLUE_GREEN" }</code>): new tasks come up on a second target group, traffic shifts only after they pass health checks, then a bake window guards against regressions before the old version is torn down.</p>
+  <div class="bg" id="bg"></div>
+
+</div>
+
+<script>
+//// ---------- MODULE DATA (from the real terraform) ----------
+const M = {
+  network:{x:60,y:255,w:128,h:54,ic:"🌐",cat:"network",tag:"foundation",name:"network",
+    purpose:"The VPC everything lives in: 3 subnet tiers across 2 AZs, a single NAT, and the tiered security groups.",
+    res:[["aws_vpc","10.0.0.0/16, DNS hostnames on"],["aws_subnet ×6","public · private-app · private-data, 2 AZs"],
+      ["aws_nat_gateway","single (cost) in public subnet"],["aws_security_group ×5","alb→frontend→backend→rds/redis"],
+      ["aws_db_subnet_group / aws_elasticache_subnet_group","for the managed data tier"]],
+    consumes:[], provides:[["alb","public subnets + alb SG"],["frontend","private-app subnets + frontend SG"],
+      ["backend","private-app subnets + backend SG"],["rds","db subnet group + rds SG"],
+      ["elasticache","subnet group + redis SG"],["cloudmap","vpc_id"]],
+    why:"Tiered SGs are the real security boundary: only the ALB SG is open to the internet (80/443); every other tier only accepts traffic from the tier in front of it."},
+  ecr:{x:300,y:60,w:120,h:50,ic:"📦",cat:"img",tag:"registry",name:"ecr",
+    purpose:"Two image repositories with scan-on-push and a retention policy.",
+    res:[["aws_ecr_repository ×2","pongapp-frontend, pongapp-backend"],["aws_ecr_lifecycle_policy","keep last 15 images"]],
+    consumes:[], provides:[["frontend","image URL"],["backend","image URL"],["iam-github-oidc","repo ARNs (push)"],["iam-github-deploy","repo ARNs (pull)"]],
+    why:"Images are pinned by git SHA in CI (never :latest in a real deploy), so every task definition is reproducible."},
+  secrets:{x:300,y:140,w:120,h:50,ic:"🔐",cat:"sec",tag:"secrets manager",name:"secrets",
+    purpose:"Generates the DB password and Django key at apply time and stores them in Secrets Manager — never in git or plain env.",
+    res:[["random_password ×2","db password, django secret key"],["aws_secretsmanager_secret ×2","recovery_window_in_days = 0"]],
+    consumes:[], provides:[["rds","master password"],["backend","secret ARNs (valueFrom)"]],
+    why:"The backend task definition references secret ARNs via valueFrom — the value is injected into the container at start and never appears in the task def, env file, or state as plaintext."},
+  cloudmap:{x:300,y:255,w:120,h:54,ic:"🧭",cat:"dns",tag:"service discovery",name:"cloudmap",
+    purpose:"A private DNS namespace (pongapp.local) the backend registers into and the frontend resolves against.",
+    res:[["aws_service_discovery_private_dns_namespace","pongapp.local, scoped to the VPC"]],
+    consumes:[["network","vpc_id"]], provides:[["backend","namespace_id → SD service"],["frontend","namespace name → backend.pongapp.local"]],
+    why:"This is the spine of east-west service discovery. See section 02 for the full registration/resolution story."},
+  "ecs-cluster":{x:300,y:360,w:120,h:50,ic:"⬢",cat:"cluster",tag:"compute",name:"ecs-cluster",
+    purpose:"The Fargate cluster both services run on.",
+    res:[["aws_ecs_cluster","Container Insights enabled"],["capacity_providers","FARGATE + FARGATE_SPOT"]],
+    consumes:[], provides:[["frontend","cluster ARN"],["backend","cluster ARN"]],
+    why:"Fargate means no EC2 to patch or scale — AWS runs the nodes. Spot capacity is available for cost savings on tolerant workloads."},
+  "iam-github-oidc":{x:300,y:500,w:128,h:54,ic:"🔑",cat:"iam",tag:"keyless ci",name:"iam-github-oidc",
+    purpose:"The GitHub OIDC trust + a narrow CI role that can only push images to ECR.",
+    res:[["aws_iam_openid_connect_provider","token.actions.githubusercontent.com"],["aws_iam_role (ci)","sub scoped to repo:…:ref:refs/heads/main"],["policy","ecr push to the two repos only"]],
+    consumes:[["ecr","repo ARNs"]], provides:[["iam-github-deploy","OIDC provider ARN"]],
+    why:"No long-lived AWS keys in GitHub. Actions exchanges a short-lived OIDC token for temporary STS credentials, scoped to this repo and branch."},
+  rds:{x:540,y:95,w:120,h:50,ic:"🛢️",cat:"data",tag:"postgres",name:"rds",
+    purpose:"Managed PostgreSQL 17 in the private data subnets.",
+    res:[["aws_db_instance","db.t4g.micro, 20GB gp3, storage_encrypted"],["","multi_az = false (dev), skip_final_snapshot"]],
+    consumes:[["network","db subnet group + rds SG"],["secrets","master password"]],
+    provides:[["backend","address · port · db name"]],
+    why:"Managed RDS gives backups, patching and failover for free. The backend reaches it only through the rds SG, which accepts 5432 solely from the backend SG."},
+  elasticache:{x:540,y:175,w:120,h:50,ic:"⚡",cat:"data",tag:"redis",name:"elasticache",
+    purpose:"Managed Redis 7 for Django Channels / caching.",
+    res:[["aws_elasticache_replication_group","cache.t4g.micro, 1 node"]],
+    consumes:[["network","subnet group + redis SG"]], provides:[["backend","primary endpoint · port"]],
+    why:"Single node keeps dev cost down; flip num_cache_clusters + automatic_failover for HA. Reachable only from the backend SG on 6379."},
+  alb:{x:540,y:330,w:120,h:56,ic:"⚖️",cat:"lb",tag:"public edge",name:"alb",
+    purpose:"The internet-facing load balancer and the blue/green machinery for the frontend.",
+    res:[["aws_lb","internet-facing, public subnets, alb SG"],["aws_lb_target_group ×2","fe-blue + fe-green (target_type ip)"],
+      ["aws_lb_listener :80","+ aws_lb_listener_rule (production)"],["aws_iam_role (ecs_bluegreen)","ECS shifts the listener rule"]],
+    consumes:[["network","public subnets + alb SG"]],
+    provides:[["frontend","blue/green TGs · listener rule · bluegreen role"],["backend","alb_dns_name (CSRF/CORS allowlist)"]],
+    why:"Two target groups + a listener rule are what make ECS-native blue/green possible: ECS moves the rule from blue to green once the new tasks are healthy."},
+  backend:{x:782,y:150,w:128,h:56,ic:"🐍",cat:"cluster",tag:"ecs-service",name:"backend",
+    purpose:"Django/daphne service. Found via Cloud Map (no public exposure). Rolling deploys.",
+    res:[["aws_ecs_task_definition","daphne :8000, awslogs, secrets via valueFrom"],
+      ["aws_ecs_service","desired 2, registers in Cloud Map"],
+      ["aws_service_discovery_service","A records, MULTIVALUE, ECS custom health"],
+      ["aws_iam_role ×2","task execution + task role"]],
+    consumes:[["network","subnets + backend SG"],["ecs-cluster","cluster"],["ecr","image"],["secrets","DB_PASSWORD · DJANGO_SECRET_KEY"],
+      ["rds","DB endpoint"],["elasticache","Redis endpoint"],["cloudmap","namespace → registers backend.pongapp.local"],["alb","alb_dns for CSRF/CORS"]],
+    provides:[["iam-github-deploy","task role ARNs (PassRole)"]],
+    why:"The backend is the hub: it consumes nearly every other module. It is never reachable from the internet — only the frontend (via Cloud Map) and the data tier SGs let it talk."},
+  frontend:{x:782,y:300,w:128,h:56,ic:"🅰️",cat:"lb",tag:"ecs-service",name:"frontend",
+    purpose:"Angular built into nginx. Public via the ALB. ECS-native blue/green. Proxies /api etc. to the backend.",
+    res:[["aws_ecs_task_definition","nginx :80, BACKEND_HOST + BACKEND_RESOLVER env"],
+      ["aws_ecs_service","blue/green: deployment_configuration strategy=BLUE_GREEN, bake 5m"],
+      ["load_balancer.advanced_configuration","alternate TG + production listener rule + role"]],
+    consumes:[["network","subnets + frontend SG"],["ecs-cluster","cluster"],["ecr","image"],
+      ["alb","blue/green TGs + listener rule + role"],["cloudmap","backend.pongapp.local name"]],
+    provides:[["iam-github-deploy","task role ARNs (PassRole)"]],
+    why:"nginx re-resolves backend.pongapp.local through the VPC resolver every 10s, so replaced backend tasks are picked up automatically — no restart, no 502."},
+  "iam-github-deploy":{x:782,y:470,w:140,h:54,ic:"🚀",cat:"iam",tag:"keyless cd",name:"iam-github-deploy",
+    purpose:"The deploy role GitHub Actions assumes to run the ECS blue/green rollout.",
+    res:[["aws_iam_role (deploy)","trust: main branch + prod environment"],
+      ["policy","ecs deploy · run-task · scoped PassRole · ecr pull · elbv2 describe · S3 state"]],
+    consumes:[["iam-github-oidc","OIDC provider ARN"],["ecr","repo ARNs"],["backend","task role ARNs"],["frontend","task role ARNs"]],
+    provides:[], why:"PassRole is condition-locked to ecs-tasks.amazonaws.com so the deploy role can hand the task roles to ECS but cannot assume them or pass them elsewhere."}
+};
+// edge category per source module's provide
+const CAT_EDGE={network:"net",ecr:"img",secrets:"sec",cloudmap:"dns","ecs-cluster":"cluster","iam-github-oidc":"iam",
+  rds:"data",elasticache:"data",alb:"lb",backend:"iam",frontend:"iam","iam-github-deploy":"iam"};
+
+const svg=document.getElementById('svg');
+const NS="http://www.w3.org/2000/svg";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function center(id){const m=M[id];return{x:m.x+m.w/2,y:m.y+m.h/2};}
+function anchor(from,to){ // edge from right of source to left of target (mostly L->R)
+  const a=M[from],b=M[to];
+  let x1=a.x+a.w, y1=a.y+a.h/2, x2=b.x, y2=b.y+b.h/2;
+  if(b.x < a.x){x1=a.x; x2=b.x+b.w;}
+  return {x1,y1,x2,y2};
+}
+let edges=[];
+function buildGraph(){
+  // defs: arrow markers per color
+  const defs=el('defs',{});
+  const cols={net:'--c-net',img:'--c-img',sec:'--c-sec',data:'--c-data',dns:'--c-dns',iam:'--c-iam',lb:'--c-lb',cluster:'--c-cluster'};
+  for(const c in cols){
+    const m=el('marker',{id:'ar-'+c,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'});
+    m.appendChild(el('path',{d:'M0,0 L10,5 L0,10 z',fill:getComputedStyle(document.body).getPropertyValue(cols[c]).trim()||'#888'}));
+    defs.appendChild(m);
+  }
+  svg.appendChild(defs);
+  const eg=el('g',{}); svg.appendChild(eg);
+  // build edges from provides
+  for(const id in M){
+    for(const [to,label] of M[id].provides){
+      const cat=CAT_EDGE[id]||'net';
+      const {x1,y1,x2,y2}=anchor(id,to);
+      const mx=(x1+x2)/2;
+      const d=`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+      const p=el('path',{d,class:`edge flow e-${cat}`,'marker-end':`url(#ar-${cat})`});
+      p.dataset.from=id; p.dataset.to=to; p.dataset.label=label;
+      eg.appendChild(p); edges.push(p);
+    }
+  }
+  // nodes
+  const ng=el('g',{}); svg.appendChild(ng);
+  for(const id in M){
+    const m=M[id];
+    const g=el('g',{class:'node',tabindex:0}); g.dataset.id=id;
+    g.appendChild(el('rect',{x:m.x,y:m.y,width:m.w,height:m.h,rx:11}));
+    const ic=el('text',{x:m.x+16,y:m.y+m.h/2+5,class:'ic','text-anchor':'middle'});ic.textContent=m.ic;g.appendChild(ic);
+    const nm=el('text',{x:m.x+30,y:m.y+m.h/2-2,class:'nm'});nm.textContent=m.name;g.appendChild(nm);
+    const ty=el('text',{x:m.x+30,y:m.y+m.h/2+12,class:'ty'});ty.textContent=m.tag;g.appendChild(ty);
+    g.addEventListener('click',()=>select(id));
+    g.addEventListener('mouseenter',()=>hover(id));
+    g.addEventListener('mouseleave',()=>{if(!selected)clearHi();});
+    g.addEventListener('keydown',e=>{if(e.key==='Enter')select(id);});
+    ng.appendChild(g);
+  }
+  // legend
+  const L=document.getElementById('legend');
+  const items=[['--c-net','network/subnets/SG'],['--c-img','container image'],['--c-sec','secret'],
+    ['--c-data','data endpoint'],['--c-dns','service discovery'],['--c-lb','load balancing'],['--c-cluster','cluster'],['--c-iam','IAM / PassRole']];
+  L.innerHTML=items.map(([c,t])=>`<span><i style="background:var(${c})"></i>${t}</span>`).join('');
+}
+let selected=null;
+function nodeG(id){return [...svg.querySelectorAll('.node')].find(n=>n.dataset.id===id);}
+function relatedEdges(id){return edges.filter(e=>e.dataset.from===id||e.dataset.to===id);}
+function hover(id){
+  edges.forEach(e=>{e.classList.add('dim');e.classList.remove('hot');});
+  relatedEdges(id).forEach(e=>{e.classList.remove('dim');e.classList.add('hot');});
+  svg.querySelectorAll('.node').forEach(n=>{
+    const keep=n.dataset.id===id||relatedEdges(id).some(e=>e.dataset.from===n.dataset.id||e.dataset.to===n.dataset.id);
+    n.classList.toggle('dim',!keep);
+  });
+}
+function clearHi(){edges.forEach(e=>{e.classList.remove('dim','hot');});svg.querySelectorAll('.node').forEach(n=>n.classList.remove('dim'));}
+function select(id){
+  selected=id;
+  svg.querySelectorAll('.node').forEach(n=>n.classList.toggle('sel',n.dataset.id===id));
+  hover(id);
+  const m=M[id];
+  document.getElementById('pTag').textContent=m.tag;
+  document.getElementById('pName').textContent=m.name;
+  document.getElementById('pPurpose').textContent=m.purpose;
+  let h='';
+  h+='<h4>Resources</h4>';
+  h+=m.res.map(r=>`<div class="res"><div class="r1">${r[0]||'⋯'}</div>${r[1]?`<div class="r2">${r[1]}</div>`:''}</div>`).join('');
+  if(m.consumes.length){h+='<h4>Consumes ←</h4>';
+    h+=m.consumes.map(c=>`<div class="flowitem inb"><span class="ar">←</span><div><b>${c[0]}</b> · ${c[1]}</div></div>`).join('');}
+  if(m.provides.length){h+='<h4>Provides →</h4>';
+    h+=m.provides.map(p=>`<div class="flowitem outb"><span class="ar">→</span><div><b>${p[0]}</b> · ${p[1]}</div></div>`).join('');}
+  h+='<h4>Why it exists</h4><div class="why">'+m.why+'</div>';
+  document.getElementById('pBody').innerHTML=h;
+}
+
+//// ---------- MODE TOGGLE + RUNTIME FLOW ----------
+const RUNPATH=[
+  {id:null,cap:"A user opens the app in their browser."},
+  {id:"alb",cap:"Request hits the public ALB on :80 → the production listener rule."},
+  {id:"frontend",cap:"Rule forwards to the frontend target group → an nginx (Fargate) task serves the Angular app."},
+  {id:"cloudmap",cap:"For /api, nginx re-resolves backend.pongapp.local via Cloud Map (VPC DNS, every 10s)."},
+  {id:"backend",cap:"nginx proxies to a healthy backend task IP :8000 — daphne handles the API call."},
+  {id:"rds",cap:"Backend reads/writes PostgreSQL on RDS (:5432)."},
+  {id:"elasticache",cap:"…and uses Redis on ElastiCache (:6379) for channels/cache."}
+];
+let playing=false,playTimer=null;
+function setMode(mode){
+  document.body.classList.toggle('run',mode==='run');
+  document.querySelectorAll('#modeseg button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  document.getElementById('runctl').style.display = mode==='run'?'flex':'none';
+  document.getElementById('modehint').textContent = mode==='run'
+    ? 'Teal = the live request path. Press play to watch a request traverse the stack.'
+    : 'Module dependency graph — amber edges carry Terraform outputs between modules.';
+  edges.forEach(e=>e.style.display = mode==='run'?'none':'');
+  clearHi(); resetRun();
+  if(mode==='build'&&selected)select(selected);
+  svg.querySelectorAll('.node').forEach(n=>n.classList.remove('runon','runoff'));
+}
+function resetRun(){
+  playing=false; if(playTimer)clearTimeout(playTimer);
+  svg.querySelectorAll('.node').forEach(n=>n.classList.remove('runon','runoff'));
+  const sc=document.getElementById('stepcap'); if(sc)sc.textContent='Press play to trace a request end-to-end.';
+}
+function playRun(){
+  resetRun(); playing=true;
+  svg.querySelectorAll('.node').forEach(n=>n.classList.add('runoff'));
+  let i=0;
+  const step=()=>{
+    if(!playing||i>=RUNPATH.length){return;}
+    const s=RUNPATH[i];
+    document.getElementById('stepcap').textContent=`${i+1}/${RUNPATH.length} · ${s.cap}`;
+    if(s.id){const g=nodeG(s.id);if(g){g.classList.add('runon');g.classList.remove('runoff');}}
+    i++; playTimer=setTimeout(step,1450);
+  };
+  step();
+}
+document.getElementById('modeseg').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.mode);});
+document.getElementById('playBtn').addEventListener('click',playRun);
+document.getElementById('resetBtn').addEventListener('click',resetRun);
+
+//// ---------- CLOUD MAP DEEP DIVE ----------
+const cmsvg=document.getElementById('cmsvg');
+const CM={
+  reg:{file:"modules/ecs-service/main.tf",tag:"terraform",
+    code:[
+      '<span class="c"># backend ECS service registers each task into Cloud Map</span>',
+      '<span class="k">resource</span> <span class="s">"aws_ecs_service"</span> "this" {',
+      '  service_registries {',
+      '    registry_arn = <span class="k">aws_service_discovery_service</span>.this.arn',
+      '  }',
+      '}',
+      '',
+      '<span class="c"># the discovery service: A records, ECS-reported health</span>',
+      '<span class="k">resource</span> <span class="s">"aws_service_discovery_service"</span> "this" {',
+      '  dns_config { routing_policy = <span class="s">"MULTIVALUE"</span> }',
+      '  health_check_custom_config {}',
+      '}'],
+    steps:["A backend task starts on Fargate and gets a private IP (e.g. 10.0.11.41).",
+      "ECS registers that IP as an A-record instance under backend.pongapp.local.",
+      "ECS reports the task's health to Cloud Map (custom health config).",
+      "When a task stops or is replaced, ECS deregisters its IP automatically."]},
+  res:{file:"apps/frontend/nginx/default.conf.template",tag:"nginx",
+    code:[
+      '<span class="c"># nginx re-resolves the backend through the VPC DNS resolver</span>',
+      '<span class="k">resolver</span> <span class="s">169.254.169.253</span> valid=10s ipv6=off;',
+      '<span class="k">set</span> $backend_upstream <span class="s">backend.pongapp.local:8000</span>;',
+      '',
+      'location /api/ {',
+      '  proxy_pass <span class="k">http://$backend_upstream</span>;',
+      '}'],
+    steps:["A request for /api/... arrives at nginx.",
+      "Because the upstream is a variable, nginx queries the VPC resolver (169.254.169.253).",
+      "Cloud Map returns the IPs of all healthy backend tasks (MULTIVALUE).",
+      "nginx connects to one — and re-resolves every 10s, so replaced tasks are picked up with no restart."]}
+};
+let cmMode='reg',cmTimer=null,cmStepIdx=0;
+function renderCM(){
+  const d=CM[cmMode];
+  document.getElementById('cmFile').textContent=d.file;
+  document.getElementById('cmTag').textContent=d.tag;
+  document.getElementById('cmCode').innerHTML=d.code.join('\n');
+  document.getElementById('cmSteps').innerHTML=d.steps.map((s,i)=>`<div class="cmstep" data-i="${i}"><span class="num">${i+1}</span><span>${s}</span></div>`).join('');
+  drawCM(); cmStepIdx=0; cmAnimate();
+}
+function drawCM(){
+  cmsvg.innerHTML='';
+  const mk=(t,a,txt)=>{const e=el(t,a);if(txt!=null)e.textContent=txt;cmsvg.appendChild(e);return e;};
+  // common: frontend box (left), namespace (mid), backend tasks (right)
+  mk('rect',{x:14,y:120,width:96,height:52,rx:10,fill:'#152136',stroke:'#2b3e5a'});
+  mk('text',{x:62,y:142,fill:'#E7EEF7','text-anchor':'middle','font-family':'var(--mono)','font-size':12},'nginx');
+  mk('text',{x:62,y:158,fill:'#8A9BB4','text-anchor':'middle','font-family':'var(--mono)','font-size':9},'frontend');
+  // cloud map namespace (center)
+  mk('rect',{x:175,y:108,width:110,height:78,rx:12,fill:'rgba(52,216,192,.08)',stroke:'var(--c-dns)','stroke-dasharray':'4 4'});
+  mk('text',{x:230,y:100,fill:'var(--c-dns)','text-anchor':'middle','font-family':'var(--mono)','font-size':10},'pongapp.local');
+  mk('text',{x:230,y:130,fill:'#E7EEF7','text-anchor':'middle','font-family':'var(--mono)','font-size':11},'Cloud Map');
+  mk('text',{x:230,y:146,fill:'#8A9BB4','text-anchor':'middle','font-family':'var(--mono)','font-size':9},'A records');
+  // backend tasks (right)
+  [60,140,220].forEach((y,i)=>{
+    mk('rect',{x:360,y:y,width:86,height:44,rx:9,fill:'#152136',stroke:'#2b3e5a',class:'be'+i});
+    mk('text',{x:403,y:y+20,fill:'#E7EEF7','text-anchor':'middle','font-family':'var(--mono)','font-size':10},'backend');
+    mk('text',{x:403,y:y+34,fill:'#8A9BB4','text-anchor':'middle','font-family':'var(--mono)','font-size':9},'10.0.'+(10+i)+'.'+(40+i*7));
+  });
+  // dot for animation
+  const dot=mk('circle',{cx:0,cy:0,r:5,fill:'var(--c-dns)',opacity:0,id:'cmdot'});
+}
+function movedot(x1,y1,x2,y2,dur,cb){
+  const dot=document.getElementById('cmdot');if(!dot)return;
+  dot.setAttribute('opacity','1');const t0=performance.now();
+  function fr(t){const k=Math.min(1,(t-t0)/dur);dot.setAttribute('cx',x1+(x2-x1)*k);dot.setAttribute('cy',y1+(y2-y1)*k);
+    if(k<1&&cmMode){requestAnimationFrame(fr);}else if(cb)cb();}
+  requestAnimationFrame(fr);
+}
+function cmAnimate(){
+  if(cmTimer)clearTimeout(cmTimer);
+  const steps=document.querySelectorAll('.cmstep');
+  steps.forEach(s=>s.classList.remove('on'));
+  let i=0;
+  const run=()=>{
+    steps.forEach((s,k)=>s.classList.toggle('on',k<=i));
+    // dot animations differ per mode
+    if(cmMode==='reg'){
+      if(i===1)movedot(403,82,230,147,700);  // task -> namespace (register)
+    }else{
+      if(i===1)movedot(110,146,230,147,650);  // nginx -> cloudmap (query)
+      if(i===2)movedot(230,147,403,82,650);   // cloudmap -> backend (answer)
+      if(i===3)movedot(110,146,403,160,750);  // nginx -> backend (connect)
+    }
+    i++; if(i<steps.length)cmTimer=setTimeout(run,1600); else cmTimer=setTimeout(()=>{cmStepIdx=0;cmAnimate();},2600);
+  };
+  run();
+}
+document.getElementById('cmtabs').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  cmMode=b.dataset.cm;
+  document.querySelectorAll('#cmtabs button').forEach(x=>x.classList.toggle('active',x===b));
+  renderCM();
+});
+
+//// ---------- BLUE/GREEN STEPPER ----------
+const BG=[
+  ['done','push → main','CI starts','GitHub Actions assumes the OIDC CI role.'],
+  ['done','build + push','→ ECR','Both images built, tagged by git SHA, pushed (keyless).'],
+  ['done','migrate','one-shot task','Deploy role runs a migration-only task before any traffic shift.'],
+  ['green','green tasks','new target group','ECS launches the new version on the green target group.'],
+  ['green','health + shift','listener rule','Once green is healthy, ECS moves the production listener rule blue → green.'],
+  ['green','bake 5m','guard window','Traffic watched; CloudWatch alarms can auto-rollback to blue.'],
+  ['','retire blue','done','Old tasks drained and terminated; green is now production.']
+];
+document.getElementById('bg').innerHTML=BG.map(s=>
+  `<div class="bgs ${s[0]}"><div class="bn">${s[1]}</div><div class="bt">${s[2]}</div><div class="bd">${s[3]}</div></div>`).join('');
+
+//// ---------- INIT ----------
+buildGraph();
+renderCM();
+select('cloudmap');   // open on Cloud Map (the headline)
+</script>
+</body>
+</html>
