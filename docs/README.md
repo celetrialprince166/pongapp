@@ -15,9 +15,11 @@ Follow a chapter top to bottom and you should reproduce the same result.
 | 1 | Containerize & verify locally | Dockerfiles + `docker-compose`; the app running on a laptop. *(Phase 1 — completed earlier.)* |
 | 2 | [Terraform infrastructure](02-terraform-infrastructure.md) | Provisioning the full ECS stack as code: VPC, ECR, secrets, RDS, ElastiCache, Cloud Map, ALB, Fargate cluster, and keyless-OIDC IAM. |
 | 3 | [ECS deploy + CI/CD](03-ecs-deploy-and-cicd.md) | GitHub Actions pipeline, the blue/green go-live, and the two real bugs we hit and fixed. |
+| 5 | [Resiliency](05-resiliency.md) | Kill a backend task, prove ECS self-heals with zero downtime; the health-check bug it surfaced. *(EKS half pending Phase 4.)* |
 
-> **New in this round:** chapters **02** and **03**. Phase 1 (local
-> containerization) was completed earlier and is referenced for context.
+> **New in this round:** chapters **02**, **03**, and **05**. Phase 1 (local
+> containerization) was completed earlier; Phase 4 (EKS) is next, after which the
+> resiliency chapter gains its Kubernetes half.
 
 ## The live app
 

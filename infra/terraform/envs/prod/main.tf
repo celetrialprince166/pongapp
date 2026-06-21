@@ -115,7 +115,8 @@ module "backend" {
   }
   secret_arns = module.secrets.secret_arns
 
-  health_check_command = ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8000/api/health/ || exit 1"]
+  # python:3.12-slim has no wget/curl, so probe with Python's stdlib (always present).
+  health_check_command = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=4)\" || exit 1"]
 
   enable_service_discovery = true
   namespace_id             = module.cloudmap.namespace_id
