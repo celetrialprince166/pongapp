@@ -1,0 +1,210 @@
+/* Button Base Styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-base);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--admin-border-focus);
+  outline-offset: 2px;
+}
+
+.button-content {
+  display: inline-flex;
+  align-items: center;
+}
+
+.button-icon {
+  flex-shrink: 0;
+}
+
+/* Button Sizes */
+.button-sm {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-2) var(--spacing-3);
+  min-height: 32px;
+}
+
+.button-md {
+  font-size: var(--font-size-base);
+  padding: var(--spacing-3) var(--spacing-4);
+  min-height: 40px;
+}
+
+.button-lg {
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-4) var(--spacing-6);
+  min-height: 48px;
+}
+
+/* Button Variants */
+
+/* Primary */
+.button-primary {
+  background: var(--admin-primary-500);
+  color: var(--admin-text-primary);
+  border-color: var(--admin-primary-500);
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--admin-primary-600);
+  border-color: var(--admin-primary-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.button-primary:active:not(:disabled) {
+  background: var(--admin-primary-700);
+  transform: translateY(0);
+}
+
+/* Secondary */
+.button-secondary {
+  background: var(--admin-bg-tertiary);
+  color: var(--admin-text-primary);
+  border-color: var(--admin-border-primary);
+}
+
+.button-secondary:hover:not(:disabled) {
+  background: var(--admin-bg-hover);
+  border-color: var(--admin-border-secondary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.button-secondary:active:not(:disabled) {
+  background: var(--admin-bg-active);
+  transform: translateY(0);
+}
+
+/* Danger */
+.button-danger {
+  background: var(--admin-danger-500);
+  color: var(--admin-text-primary);
+  border-color: var(--admin-danger-500);
+}
+
+.button-danger:hover:not(:disabled) {
+  background: var(--admin-danger-600);
+  border-color: var(--admin-danger-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.button-danger:active:not(:disabled) {
+  background: var(--admin-danger-700);
+  transform: translateY(0);
+}
+
+/* Outline */
+.button-outline {
+  background: transparent;
+  color: var(--admin-primary-500);
+  border-color: var(--admin-primary-500);
+}
+
+.button-outline:hover:not(:disabled) {
+  background: var(--admin-primary-500);
+  color: var(--admin-text-primary);
+}
+
+.button-outline:active:not(:disabled) {
+  background: var(--admin-primary-600);
+}
+
+/* Ghost */
+.button-ghost {
+  background: transparent;
+  color: var(--admin-text-secondary);
+  border-color: transparent;
+}
+
+.button-ghost:hover:not(:disabled) {
+  background: var(--admin-bg-hover);
+  color: var(--admin-text-primary);
+}
+
+.button-ghost:active:not(:disabled) {
+  background: var(--admin-bg-active);
+}
+
+/* Button States */
+
+/* Disabled */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Loading */
+.button-loading {
+  pointer-events: none;
+}
+
+.button-loader {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: button-spin 0.6s linear infinite;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Full Width */
+.button-full-width {
+  width: 100%;
+}
+
+/* Icon Only Button (no text content) */
+.button:has(.button-content:empty) {
+  padding: var(--spacing-2);
+}
+
+.button-sm:has(.button-content:empty) {
+  min-width: 32px;
+  padding: var(--spacing-2);
+}
+
+.button-md:has(.button-content:empty) {
+  min-width: 40px;
+  padding: var(--spacing-3);
+}
+
+.button-lg:has(.button-content:empty) {
+  min-width: 48px;
+  padding: var(--spacing-4);
+}
+
+/* Accessibility */
+.button:focus-visible {
+  outline: 2px solid var(--admin-primary-500);
+  outline-offset: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .button-lg {
+    font-size: var(--font-size-base);
+    padding: var(--spacing-3) var(--spacing-5);
+    min-height: 44px;
+  }
+}

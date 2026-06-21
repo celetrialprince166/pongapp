@@ -1,0 +1,733 @@
+<!-- Registration Success Modal -->
+@if (showRegistrationSuccessModal()) {
+  <div class="modal-overlay" (click)="showRegistrationSuccessModal.set(false)">
+    <div class="modal-box success-modal" (click)="$event.stopPropagation()">
+      <div class="success-modal-icon">✓</div>
+      <h3 class="success-modal-title">Registration Confirmed!</h3>
+      <p class="success-modal-body">
+        You have successfully registered for <strong>{{ tournament()?.name }}</strong>.
+      </p>
+      <p class="success-modal-subtitle">
+        You will receive updates about match schedules and results.
+      </p>
+      <button class="btn-success-modal" (click)="showRegistrationSuccessModal.set(false)">
+        Got it!
+      </button>
+    </div>
+  </div>
+}
+
+<div class="tournament-detail-page" data-cy="tournament-detail-page">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading tournament details...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-container">
+      <div class="error-banner">
+        <span class="error-message">{{ error() }}</span>
+        <button class="btn-close" (click)="clearError()">&times;</button>
+      </div>
+      <button class="btn-secondary" (click)="goBack()">Back to Tournaments</button>
+    </div>
+  }
+
+  <!-- Tournament Content -->
+  @else if (tournament()) {
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <!-- Back Button -->
+        <button class="btn-back" (click)="goBack()">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <!-- Title and Status -->
+        <div class="header-title-section">
+          <div class="title-row">
+            <h1 class="tournament-title">{{ tournament()!.name }}</h1>
+            <span [class]="getStatusClass(tournament()!)">
+              {{ getStatusLabel(tournament()!) }}
+            </span>
+          </div>
+          <p class="organizer-text">Organized by {{ tournament()!.organizer_username || 'Tournament Organizer' }}</p>
+        </div>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <button class="btn-share">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 7C15.1046 7 16 6.10457 16 5C16 3.89543 15.1046 3 14 3C12.8954 3 12 3.89543 12 5C12 6.10457 12.8954 7 14 7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6 12C7.10457 12 8 11.1046 8 10C8 8.89543 7.10457 8 6 8C4.89543 8 4 8.89543 4 10C4 11.1046 4.89543 12 6 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 17C15.1046 17 16 16.1046 16 15C16 13.8954 15.1046 13 14 13C12.8954 13 12 13.8954 12 15C12 16.1046 12.8954 17 14 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7.7 11.2L12.3 13.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12.3 6.2L7.7 8.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Share
+        </button>
+
+        @if (isRegistered() && !authService.isAdmin()) {
+          <span class="badge-you-registered" data-cy="you-registered-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            You are registered
+          </span>
+        } @else if (canShowRegisterButton() && !authService.isAdmin()) {
+          <button class="btn-register-main" data-cy="register-btn" [disabled]="registering()" (click)="onRegister()">
+            @if (registering()) {
+              Registering...
+            } @else {
+              Register Now
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button
+        class="tab-button"
+        [class.active]="activeTab() === 'overview'"
+        (click)="switchTab('overview')">
+        Overview
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab() === 'participants'"
+        (click)="switchTab('participants')">
+        Participants
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab() === 'matches'"
+        (click)="switchTab('matches')">
+        Matches
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab() === 'bracket'"
+        (click)="switchTab('bracket')">
+        Bracket
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab() === 'awards'"
+        (click)="switchTab('awards')"
+        data-cy="tab-awards">
+        Awards
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Overview Tab -->
+      @if (activeTab() === 'overview') {
+        <div class="overview-content">
+          <!-- Main Content (Left) -->
+          <div class="main-content">
+            <!-- Info Cards Grid -->
+            <div class="info-cards-grid">
+              <!-- Start Date Card -->
+              <div class="info-card">
+                <svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <div class="card-content">
+                  <span class="card-label">START DATE</span>
+                  <span class="card-value">{{ formatDate(tournament()!.start_date) }}</span>
+                </div>
+              </div>
+
+              <!-- Format Card -->
+              <div class="info-card">
+                <svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="card-content">
+                  <span class="card-label">FORMAT</span>
+                  <span class="card-value">{{ formatTournamentType(tournament()!.tournament_format) }}</span>
+                </div>
+              </div>
+
+              <!-- Location Card -->
+              <div class="info-card">
+                <svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="card-content">
+                  <span class="card-label">LOCATION</span>
+                  <span class="card-value">{{ getLocation() }}</span>
+                </div>
+              </div>
+
+              <!-- Skill Level Card -->
+              <div class="info-card">
+                <svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="card-content">
+                  <span class="card-label">SKILL LEVEL</span>
+                  <span class="card-value">{{ getSkillLevel() }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tournament Description -->
+            <div class="description-section">
+              <h2 class="section-title">Tournament Description</h2>
+              <p class="description-text">
+                {{ tournament()!.description || 'Welcome to an exciting table tennis tournament! Join us for competitive matches and great sportsmanship.' }}
+              </p>
+
+              <!-- Official Rules -->
+              <div class="rules-section">
+                <div class="rules-header">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 2L2 7L9 12L16 7L9 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L9 17L16 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <h3 class="rules-title">Official Rules</h3>
+                </div>
+
+                <ul class="rules-list">
+                  <li>All matches follow ITTF standard regulations.</li>
+                  <li>Best of 5 games for preliminary rounds, Best of 7 for Semi-finals and Finals.</li>
+                  <li>Players must arrive at least 30 minutes before their scheduled match time.</li>
+                  <li>Approved table tennis attire and non-marking indoor shoes are mandatory.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar (Right) -->
+          <div class="sidebar">
+            <!-- Participants Card -->
+            <div class="sidebar-card participants-card">
+              <div class="card-header">
+                <h3 class="card-title">Participants</h3>
+                <span class="participants-count">{{ tournament()!.participant_count }} / {{ tournament()!.max_participants }} Filled</span>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="getProgressPercentage()" [class]="getProgressBarClass()"></div>
+              </div>
+
+              <!-- Participant Avatars -->
+              <div class="participant-avatars">
+                @for (participant of getDisplayParticipants(); track participant.id; let i = $index) {
+                  <div class="avatar" [style.z-index]="100 - i">
+                    {{ getInitials(participant.player_username || 'P') }}
+                  </div>
+                }
+                @if (getRemainingParticipants() > 0) {
+                  <div class="avatar avatar-more">
+                    +{{ getRemainingParticipants() }}
+                  </div>
+                }
+              </div>
+
+              <!-- Register Button (hidden for admins) -->
+              @if (canShowRegisterButton() && !authService.isAdmin()) {
+                <button class="btn-register-sidebar" data-cy="register-sidebar-btn" [disabled]="registering()" (click)="onRegister()">
+                  @if (registering()) {
+                    Registering...
+                  } @else {
+                    Register Now
+                  }
+                </button>
+
+                @if (getDaysUntilDeadline() >= 0) {
+                  <p class="registration-deadline">
+                    REGISTRATION CLOSES IN {{ getDaysUntilDeadline() }} {{ getDaysUntilDeadline() === 1 ? 'DAY' : 'DAYS' }}
+                  </p>
+                }
+              }
+            </div>
+
+            <!-- Tournament Prizes Card -->
+            <div class="sidebar-card prizes-card">
+              <div class="prizes-header">
+                <span class="prizes-icon">🏆</span>
+                <h3 class="prizes-title">Tournament Prizes</h3>
+              </div>
+
+              @if (awardTiersLoading()) {
+                <div class="prizes-loading">Loading prizes...</div>
+              } @else if (awardTiers().length === 0) {
+                <div class="prizes-empty">No prizes configured yet.</div>
+              } @else {
+                <div class="prizes-list">
+                  @for (tier of awardTiers(); track tier.id) {
+                    <div class="prize-row">
+                      <div class="prize-medal">
+                        <span class="medal-icon">{{ getPrizeMedalIcon(tier) }}</span>
+                      </div>
+                      <div class="prize-info">
+                        <div class="prize-position">{{ getPrizeTierLabel(tier) }}</div>
+                        <div class="prize-label">{{ tier.label || getTierPositionLabel(tier) }}</div>
+                        <div class="prize-points">{{ tier.points | number }} Pts</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Official Sponsor Card -->
+            <div class="sidebar-card sponsor-card">
+              <span class="sponsor-label">OFFICIAL SPONSOR</span>
+              <div class="sponsor-logo">VELOCITY GEAR</div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Bracket Tab -->
+      @if (activeTab() === 'bracket') {
+        <div class="bracket-view" data-cy="bracket-section">
+          @if (tournament()!.status === 'REGISTRATION' || tournament()!.status === 'UPCOMING') {
+            <div class="bracket-placeholder">
+              <p>Bracket will be generated when the tournament starts</p>
+            </div>
+          } @else {
+            <app-tournament-bracket
+              [bracketMatches]="bracket()"
+              [format]="tournament()!.tournament_format"
+              [tournamentIdInput]="tournamentId()!">
+            </app-tournament-bracket>
+          }
+        </div>
+      }
+
+      <!-- Matches Tab -->
+      @if (activeTab() === 'matches') {
+        <div class="matches-view">
+          @if (bracket().length === 0) {
+            <div class="empty-state">
+              <p>No matches yet</p>
+            </div>
+          } @else {
+            <!-- Live Now Section -->
+            @if (getLiveMatches().length > 0) {
+              <div class="live-now-section">
+                <div class="live-now-header">
+                  <span class="live-dot"></span>
+                  Live Now
+                </div>
+
+                @for (match of getLiveMatches(); track match.id) {
+                  <div class="live-match-card">
+                    <div class="live-match-header">
+                      <span class="watch-live-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M15 10L19.553 7.724C19.7054 7.64779 19.8755 7.61264 20.0459 7.62249C20.2162 7.63235 20.3807 7.68681 20.5228 7.78016C20.6649 7.87351 20.7795 8.00251 20.855 8.15389C20.9305 8.30527 20.9643 8.47373 20.953 8.642V15.358C20.9643 15.5263 20.9305 15.6947 20.855 15.8461C20.7795 15.9975 20.6649 16.1265 20.5228 16.2198C20.3807 16.3132 20.2162 16.3677 20.0459 16.3775C19.8755 16.3874 19.7054 16.3522 19.553 16.276L15 14V10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <rect x="3" y="6" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        WATCH LIVE
+                      </span>
+                      <span class="table-info">TABLE 01 • QUARTER-FINALS</span>
+                    </div>
+
+                    <div class="live-match-players">
+                      <div class="live-player">
+                        <div class="player-avatar">{{ getPlayerInitials(match.player1_name || 'TBD') }}</div>
+                        <span class="player-name">{{ match.player1_name || 'TBD' }}</span>
+                      </div>
+                      <div class="live-score">
+                        <span class="score">{{ match.player1_score || 0 }}</span>
+                        <span class="score">{{ match.player2_score || 0 }}</span>
+                      </div>
+                      <div class="live-player">
+                        <div class="player-avatar">{{ getPlayerInitials(match.player2_name || 'TBD') }}</div>
+                        <span class="player-name">{{ match.player2_name || 'TBD' }}</span>
+                      </div>
+                    </div>
+
+                    <div class="live-match-footer">
+                      <span class="set-score">SET 4: 8 - 4</span>
+                      <a href="#" class="stream-link">Stream Match</a>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Filter Tabs -->
+            <div class="matches-filter-tabs">
+              <button
+                class="filter-tab"
+                [class.active]="matchFilter() === 'all'"
+                (click)="setMatchFilter('all')">
+                All Rounds
+              </button>
+              <button
+                class="filter-tab"
+                [class.active]="matchFilter() === 'completed'"
+                (click)="setMatchFilter('completed')">
+                Completed
+              </button>
+              <button
+                class="filter-tab"
+                [class.active]="matchFilter() === 'upcoming'"
+                (click)="setMatchFilter('upcoming')">
+                Upcoming
+              </button>
+            </div>
+
+            <!-- Grouped Matches by Round -->
+            @for (round of getFilteredMatchesByRound(); track round.name) {
+              <div class="matches-round-section">
+                <h3 class="round-section-title">{{ round.name }}</h3>
+
+                <div class="matches-list">
+                  @for (match of round.matches; track match.id) {
+                    <div class="match-result-card" [class.completed]="match.winner">
+                      <div class="match-players-row">
+                        <div class="match-player">
+                          <div class="player-avatar">{{ getPlayerInitials(match.player1_name || 'TBD') }}</div>
+                          <div class="player-info">
+                            <span class="player-name">{{ match.player1_name || 'TBD' }}</span>
+                            @if (match.player1_seed) {
+                              <span class="player-seed">SEED #{{ match.player1_seed }}</span>
+                            }
+                          </div>
+                        </div>
+                        <div class="match-score-section">
+                          <span class="match-score" [class.winner-score]="match.winner === match.player1">
+                            {{ match.player1_score !== null ? match.player1_score : '-' }}
+                          </span>
+                          <span class="score-divider">FT</span>
+                          <span class="match-score" [class.winner-score]="match.winner === match.player2">
+                            {{ match.player2_score !== null ? match.player2_score : '-' }}
+                          </span>
+                        </div>
+                        <div class="match-player">
+                          <div class="player-avatar">{{ getPlayerInitials(match.player2_name || 'TBD') }}</div>
+                          <div class="player-info">
+                            <span class="player-name">{{ match.player2_name || 'TBD' }}</span>
+                            @if (match.player2_seed) {
+                              <span class="player-seed">SEED #{{ match.player2_seed }}</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="match-meta-row">
+                        @if (match.winner) {
+                          <span class="match-status">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                              <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Ended {{ getMatchEndTime(match) }}
+                          </span>
+                        } @else {
+                          <span class="match-status upcoming">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                              <path d="M3 10H21M8 2V6M16 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            {{ getMatchScheduledTime(match) }}
+                          </span>
+                        }
+                        <span class="match-table">TABLE {{ match.table_number || '03' }}</span>
+                        @if (match.winner) {
+                          <a href="#" class="view-scorecard">
+                            View Scorecard
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                          </a>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- Participants Tab -->
+      @if (activeTab() === 'participants') {
+        <div class="participants-view">
+          @if (participants().length === 0) {
+            <div class="empty-state">
+              <p>No participants yet</p>
+            </div>
+          } @else {
+            <!-- Search and Filters -->
+            <div class="participants-controls">
+              <div class="search-bar">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                  <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <input
+                  type="text"
+                  class="search-input"
+                  placeholder="Search players..."
+                  [value]="participantSearch()"
+                  (input)="onParticipantSearchChange($event)">
+              </div>
+              <div class="participants-actions">
+                <button class="btn-filter">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 4H21V6H3V4ZM7 11H17V13H7V11ZM11 18H13V20H11V18Z" fill="currentColor"/>
+                  </svg>
+                  Filter
+                </button>
+                <button class="btn-sort">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 4H16M3 8H12M3 12H12M17 8V20M17 20L13 16M17 20L21 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  ELO Rating
+                </button>
+              </div>
+            </div>
+
+            <!-- Participants Table -->
+            <div class="participants-table-container">
+              <table class="participants-table">
+                <thead>
+                  <tr>
+                    <th>SEED</th>
+                    <th>PLAYER</th>
+                    <th>ELO RATING</th>
+                    <th>STATUS</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (participant of getPaginatedParticipants(); track participant.id; let i = $index) {
+                    <tr>
+                      <td>
+                        <span class="seed-badge" [class.gold]="participant.seed === 1">
+                          {{ participant.seed || (participantOffset() + i + 1) }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="table-player">
+                          <div class="player-avatar">
+                            {{ getInitials(participant.player_username || 'P') }}
+                          </div>
+                          <div class="player-info">
+                            <span class="player-name">{{ participant.player_username || 'Player' }}</span>
+                            <span class="player-club">{{ getParticipantClub(participant) }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="elo-rating">
+                          <span class="elo-value">{{ getParticipantELO(participant) }}</span>
+                          <span class="elo-trend" [class.positive]="true">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 5V19M12 5L6 11M12 5L18 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            {{ getParticipantTrend(participant) }}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="status-badge" [class]="getParticipantStatusClass(participant)">
+                          {{ getParticipantStatus(participant) }}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn-menu">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
+                            <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                            <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="participants-pagination">
+              <span class="pagination-info">
+                Showing {{ getParticipantRangeStart() }} of {{ getFilteredParticipants().length }} participants
+              </span>
+              <div class="pagination-controls">
+                <button
+                  class="btn-pagination"
+                  [disabled]="participantPage() === 1"
+                  (click)="previousParticipantPage()">
+                  Previous
+                </button>
+                <button
+                  class="btn-pagination"
+                  [disabled]="!hasMoreParticipants()"
+                  (click)="nextParticipantPage()">
+                  Next
+                </button>
+              </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="participants-stats">
+              <div class="stat-card">
+                <span class="stat-label">REGISTRATION PROGRESS</span>
+                <div class="stat-value-group">
+                  <span class="stat-value">{{ tournament()!.participant_count }}</span>
+                  <span class="stat-total">/ {{ tournament()!.max_participants }} Slots</span>
+                </div>
+                <div class="stat-progress-bar">
+                  <div
+                    class="stat-progress-fill"
+                    [style.width.%]="getProgressPercentage()">
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <span class="stat-label">AVERAGE ELO</span>
+                <div class="stat-value-group">
+                  <span class="stat-value">{{ getAverageELO() }}</span>
+                  <span class="stat-trend positive">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 5V19M12 5L6 11M12 5L18 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    +2.4% vs last year
+                  </span>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <span class="stat-label">CLUBS REPRESENTED</span>
+                <div class="stat-value-group">
+                  <span class="stat-value">{{ getClubsCount() }}</span>
+                </div>
+                <span class="stat-description">Different Organizations</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Awards Tab -->
+      @if (activeTab() === 'awards') {
+        <div class="awards-tab">
+
+          <!-- Header -->
+          <div class="awards-header">
+            <div>
+              <h2 class="awards-title">Award Tiers</h2>
+              <p class="awards-subtitle">
+                Point distributions and ranking rewards for this tournament.
+              </p>
+            </div>
+          </div>
+
+          <!-- Stat cards -->
+          <div class="awards-stats">
+            <div class="awards-stat-card">
+              <span class="awards-stat-icon">🏆</span>
+              <div>
+                <div class="awards-stat-label">TOTAL TIERS</div>
+                <div class="awards-stat-value">{{ awardTiers().length }} Active</div>
+              </div>
+            </div>
+            <div class="awards-stat-card">
+              <span class="awards-stat-icon">⭐</span>
+              <div>
+                <div class="awards-stat-label">TOP POINTS</div>
+                <div class="awards-stat-value">{{ topPoints() }} Pts</div>
+              </div>
+            </div>
+            <div class="awards-stat-card">
+              <span class="awards-stat-icon">✅</span>
+              <div>
+                <div class="awards-stat-label">STATUS</div>
+                <div class="awards-stat-value awards-stat-verified">Verified</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading state -->
+          @if (awardTiersLoading()) {
+            <div class="awards-loading">Loading award tiers...</div>
+          }
+
+          <!-- Error state -->
+          @if (awardTiersError()) {
+            <div class="awards-error">{{ awardTiersError() }}</div>
+          }
+
+          <!-- Table -->
+          @if (!awardTiersLoading() && !awardTiersError()) {
+            <div class="tiers-table">
+
+              <div class="tiers-table-header">
+                <span>TIER NAME</span>
+                <span>POINTS DISTRIBUTION</span>
+                <span>POSITION RANK</span>
+              </div>
+
+              @if (awardTiers().length === 0) {
+                <div class="tiers-empty">
+                  No award tiers configured for this tournament yet.
+                </div>
+              }
+
+              @for (tier of awardTiersPaged(); track tier.id) {
+                <div class="tiers-table-row">
+                  <div class="tier-name-cell">
+                    <span class="tier-icon">{{ getTierIcon(tier) }}</span>
+                    <span>{{ tier.label || getTierLabel(tier) }}</span>
+                  </div>
+                  <div class="tier-points-badge">{{ tier.points }} Pts</div>
+                  <div class="tier-position-rank">{{ getTierPositionLabel(tier) }}</div>
+                </div>
+              }
+
+              @if (awardTiers().length > awardTiersPageSize) {
+                <div class="tiers-table-footer">
+                  <span>
+                    Showing {{ (awardTiersPage() - 1) * awardTiersPageSize + 1 }}
+                    to {{ minOf(awardTiersPage() * awardTiersPageSize, awardTiers().length) }}
+                    of {{ awardTiers().length }} tiers
+                  </span>
+                  <div class="tiers-pagination-arrows">
+                    <button [disabled]="awardTiersPage() === 1"
+                            (click)="prevAwardPage()">‹</button>
+                    <button [disabled]="awardTiersPage() === totalAwardTiersPages()"
+                            (click)="nextAwardPage()">›</button>
+                  </div>
+                </div>
+              }
+
+            </div>
+          }
+
+        </div>
+      }
+
+    </div>
+  }
+</div>

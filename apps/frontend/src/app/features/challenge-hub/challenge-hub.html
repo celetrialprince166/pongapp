@@ -1,0 +1,201 @@
+<div class="challenge-hub-container">
+    <header class="hub-header">
+        <a routerLink="/dashboard" class="back-link">
+            <lucide-icon [name]="arrowLeftIcon" size="20"></lucide-icon>
+            <span>Back to Dashboard</span>
+        </a>
+        <h1 class="hub-title">Challenge Hub</h1>
+        <p class="hub-subtitle">Quickly find a match or challenge specific players.</p>
+    </header>
+
+    <!-- Success Message -->
+    <div class="alert alert-success" *ngIf="successMessage()">
+        {{successMessage()}}
+    </div>
+
+    <!-- Error Message -->
+    <div class="alert alert-error" *ngIf="errorMessage()">
+        {{errorMessage()}}
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading()">
+        <p>Loading players...</p>
+    </div>
+
+    <div class="hub-content" *ngIf="!isLoading()">
+        <!-- Left Column: Selection -->
+        <div class="left-column">
+            <!-- Quick Match Section -->
+            <section class="card quick-match-card">
+                <h2 class="section-title">Quick Match</h2>
+                <div class="info-box">
+                    <div class="info-header">
+                        <h3 class="info-title">Duel - Best of 3</h3>
+                        <span class="info-badge">Default competitive match</span>
+                    </div>
+                    <p class="info-desc">Challenge a random player to a competitive ELO Duel.</p>
+                </div>
+                <button class="btn-primary full-width" (click)="challengeRandom()" [disabled]="isSubmitting()">
+                    <lucide-icon [name]="shuffleIcon" size="20"></lucide-icon>
+                    <span>Challenge Random Opponent</span>
+                </button>
+            </section>
+
+            <!-- Specific Player Section -->
+            <section class="card player-search-card">
+                <h2 class="section-title">Challenge a Specific Player</h2>
+
+                <div class="search-bar">
+                    <lucide-icon [name]="searchIcon" class="search-icon" size="20"></lucide-icon>
+                    <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
+                        placeholder="Search for a player..." class="search-input">
+                </div>
+
+                <div class="players-list">
+                    <div *ngFor="let player of filteredPlayers()" class="player-item"
+                        [class.selected]="selectedPlayer() === player" (click)="selectPlayer(player)">
+
+                        <img [src]="player.avatar || 'assets/default-avatar.png'"
+                            [alt]="player.first_name + ' ' + player.last_name" class="player-avatar">
+
+                        <div class="player-info">
+                            <p class="player-name">
+                                {{ player.first_name && player.last_name ?
+                                   player.first_name + ' ' + player.last_name :
+                                   player.username }}
+                            </p>
+                            <div class="player-stats">
+                                <span class="badge" [ngClass]="getLeagueBadgeClass(player.league)">
+                                    {{player.league}}
+                                </span>
+                                <span>ELO: {{player.current_rating}}</span>
+                                <span class="stat-win">{{player.wins}}W</span>
+                                <span class="stat-loss">{{player.losses}}L</span>
+                            </div>
+                        </div>
+
+                        <lucide-icon *ngIf="selectedPlayer() === player" [name]="checkCircleIcon" class="check-icon"
+                            size="24"></lucide-icon>
+                    </div>
+
+                    <div class="empty-state" *ngIf="filteredPlayers().length === 0">
+                        <p>No players found.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column: Configuration -->
+        <div class="right-column">
+            <div class="card config-card">
+                <!-- Selected Player Display -->
+                <section class="config-section">
+                    <h2 class="section-title">Match Configuration</h2>
+                    <div class="selected-player-display">
+                        <lucide-icon [name]="userIcon" class="user-icon" size="24"></lucide-icon>
+                        <p class="selected-text">
+                            {{ selectedPlayer() ?
+                               'Challenging: ' + (selectedPlayer()!.first_name && selectedPlayer()!.last_name ?
+                                   selectedPlayer()!.first_name + ' ' + selectedPlayer()!.last_name :
+                                   selectedPlayer()!.username) :
+                               'Select an opponent to configure match' }}
+                        </p>
+                    </div>
+                </section>
+
+                <div class="divider"></div>
+
+                <!-- Match Options -->
+                <section class="config-section">
+                    <h3 class="option-label">Custom Match Options</h3>
+                    <p class="option-desc">Select specific match settings for your challenge.</p>
+
+                    <!-- Match Type -->
+                    <div class="option-group">
+                        <div class="option-card" [class.selected]="matchType === 'duel'" (click)="matchType = 'duel'">
+                            <div class="option-card-content">
+                                <div class="option-text">
+                                    <strong class="option-title">ELO Duel</strong>
+                                    <span class="option-description">A competitive match affecting ELO and rankings.</span>
+                                </div>
+                                <input type="radio" name="matchType" value="duel" [(ngModel)]="matchType" class="radio-right">
+                            </div>
+                        </div>
+
+                        <div class="option-card" [class.selected]="matchType === 'training'" (click)="matchType = 'training'">
+                            <div class="option-card-content">
+                                <div class="option-text">
+                                    <strong class="option-title">Practice Game</strong>
+                                    <span class="option-description">A friendly match without ELO changes.</span>
+                                </div>
+                                <input type="radio" name="matchType" value="training" [(ngModel)]="matchType" class="radio-right">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider-small"></div>
+
+                    <!-- Match Format Label -->
+                    <h4 class="format-label">Match format</h4>
+
+                    <!-- Match Format -->
+                    <div class="option-group">
+                        <div class="option-card" [class.selected]="matchFormat === 'best-of'" (click)="matchFormat = 'best-of'">
+                            <div class="option-card-content">
+                                <div class="option-text">
+                                    <strong class="option-title">Best of Games</strong>
+                                    <span class="option-description">Win the majority of a set number of games.</span>
+                                </div>
+                                <input type="radio" name="matchFormat" value="best-of" [(ngModel)]="matchFormat" class="radio-right">
+                            </div>
+
+                            <div class="sub-option" *ngIf="matchFormat === 'best-of'">
+                                <div class="number-input-wrapper">
+                                    <select id="bestOfGames" [(ngModel)]="bestOfGames" class="number-select">
+                                        <option [value]="3">3</option>
+                                        <option [value]="5">5</option>
+                                        <option [value]="7">7</option>
+                                    </select>
+                                    <span class="unit-label">games</span>
+                                </div>
+                                <p class="explanation-text">A best of {{bestOfGames}} means the first player to win {{(bestOfGames + 1) / 2}} games wins the set.</p>
+                            </div>
+                        </div>
+
+                        <div class="option-card" [class.selected]="matchFormat === 'race-to'" (click)="matchFormat = 'race-to'">
+                            <div class="option-card-content">
+                                <div class="option-text">
+                                    <strong class="option-title">Race to Points</strong>
+                                    <span class="option-description">Be the first to reach a target score.</span>
+                                </div>
+                                <input type="radio" name="matchFormat" value="race-to" [(ngModel)]="matchFormat" class="radio-right">
+                            </div>
+
+                            <div class="sub-option" *ngIf="matchFormat === 'race-to'">
+                                <div class="number-input-wrapper">
+                                    <select id="raceToPoints" [(ngModel)]="raceToPoints" class="number-select">
+                                        <option [value]="11">11</option>
+                                        <option [value]="15">15</option>
+                                        <option [value]="21">21</option>
+                                    </select>
+                                    <span class="unit-label">points</span>
+                                </div>
+                                <p class="explanation-text">First player to reach target points wins the game. Best of 3 is automatically applied (you'll need to win 2 out 3 games).</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="divider"></div>
+
+                <!-- Challenge Button -->
+                <button class="btn-primary full-width challenge-btn" (click)="challengeSelected()"
+                    [disabled]="!selectedPlayer() || isSubmitting()">
+                    <lucide-icon [name]="swordsIcon" size="20"></lucide-icon>
+                    <span>{{isSubmitting() ? 'Sending Challenge...' : 'Challenge Selected Player'}}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

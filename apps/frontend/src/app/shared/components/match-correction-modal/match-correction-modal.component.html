@@ -1,0 +1,181 @@
+<div class="mcm-overlay" data-cy="score-modal" (click)="onCancel()">
+  <div class="mcm-box" [class.mcm-box--live]="mode === 'LIVE'" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="mcm-header">
+      <div class="mcm-header-left">
+        <span class="mcm-mode-badge" [class.mcm-mode-badge--live]="mode === 'LIVE'">
+          {{ mode === 'LIVE' ? '● LIVE' : '✎ CORRECT' }}
+        </span>
+        <div>
+          <h3 class="mcm-title">{{ mode === 'LIVE' ? 'Score Match' : 'Correct Match Score' }}</h3>
+          <p class="mcm-subtitle">{{ matchLabel }}</p>
+        </div>
+      </div>
+      <button class="mcm-close" (click)="onCancel()" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Players header -->
+    <div class="mcm-players-header">
+      <div class="mcm-player-col">
+        <div class="mcm-avatar">{{ player1Name[0]?.toUpperCase() }}</div>
+        <span class="mcm-player-label" data-cy="player1-name">{{ player1Name }}</span>
+      </div>
+      <span class="mcm-vs-label">vs</span>
+      <div class="mcm-player-col mcm-player-col--right">
+        <span class="mcm-player-label" data-cy="player2-name">{{ player2Name }}</span>
+        <div class="mcm-avatar">{{ player2Name[0]?.toUpperCase() }}</div>
+      </div>
+    </div>
+
+    @if (mode === 'LIVE') {
+      <!-- ── LIVE MODE ───────────────────────────────────────────── -->
+
+      @if (scoreboardLoading() && !scoreboard()) {
+        <div class="mcm-loading">
+          <span class="mcm-spinner"></span> Loading scoreboard…
+        </div>
+      } @else {
+        <!-- Games tally -->
+        <div class="mcm-tally">
+          <span class="mcm-tally-score">{{ scoreboard()?.player1_games_won ?? 0 }}</span>
+          <span class="mcm-tally-label">Games</span>
+          <span class="mcm-tally-score">{{ scoreboard()?.player2_games_won ?? 0 }}</span>
+        </div>
+
+        <!-- Current game -->
+        @if (scoreboard()?.current_game) {
+          <div class="mcm-current-game">
+            <p class="mcm-game-label">Game {{ scoreboard()?.current_game?.game_number }}</p>
+            <div class="mcm-live-row">
+              <div class="mcm-live-player">
+                <span class="mcm-live-pts">{{ scoreboard()?.current_game?.player1_score ?? 0 }}</span>
+                <button
+                  class="mcm-btn-point"
+                  data-cy="add-point-p1"
+                  (click)="addPoint(match!.player1!)"
+                  [disabled]="addingPoint() !== null || saving()">
+                  +1
+                </button>
+              </div>
+              <span class="mcm-live-sep">–</span>
+              <div class="mcm-live-player">
+                <span class="mcm-live-pts">{{ scoreboard()?.current_game?.player2_score ?? 0 }}</span>
+                <button
+                  class="mcm-btn-point"
+                  data-cy="add-point-p2"
+                  (click)="addPoint(match!.player2!)"
+                  [disabled]="addingPoint() !== null || saving()">
+                  +1
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Completed games history -->
+        @if (scoreboard()?.games && scoreboard()!.games.length > 0) {
+          <div class="mcm-games-history">
+            @for (g of scoreboard()!.games; track g.game_number) {
+              @if (g.is_completed) {
+                <div class="mcm-history-row">
+                  <span class="mcm-history-label">Game {{ g.game_number }}</span>
+                  <span class="mcm-history-result">{{ g.player1_score }} – {{ g.player2_score }}</span>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- Undo -->
+        @if (canUndo()) {
+          <div class="mcm-undo-row">
+            <button class="mcm-btn-undo" data-cy="undo-btn" (click)="undoLastPoint()" [disabled]="saving()">
+              ↩ Undo Last Point
+            </button>
+          </div>
+        }
+      }
+
+    } @else {
+      <!-- ── CORRECT MODE ────────────────────────────────────────── -->
+
+      <div class="mcm-games-entry">
+        <div class="mcm-games-entry-header">
+          <span class="mcm-entry-col-label">Game</span>
+          <span class="mcm-entry-col-label">{{ player1Name }}</span>
+          <span class="mcm-entry-col-sep"></span>
+          <span class="mcm-entry-col-label">{{ player2Name }}</span>
+        </div>
+        @for (entry of gameEntries(); track entry.game_number; let i = $index) {
+          <div class="mcm-game-entry-row">
+            <span class="mcm-game-entry-num">{{ entry.game_number }}</span>
+            <input
+              type="number"
+              class="mcm-score-input"
+              [value]="entry.player1_score"
+              (input)="updateGameScore(i, 'player1_score', $any($event.target).value)"
+              min="0" max="99"
+              [disabled]="saving()"
+              [attr.aria-label]="player1Name + ' score game ' + entry.game_number" />
+            <span class="mcm-game-entry-sep">–</span>
+            <input
+              type="number"
+              class="mcm-score-input"
+              [value]="entry.player2_score"
+              (input)="updateGameScore(i, 'player2_score', $any($event.target).value)"
+              min="0" max="99"
+              [disabled]="saving()"
+              [attr.aria-label]="player2Name + ' score game ' + entry.game_number" />
+          </div>
+        }
+      </div>
+
+      <!-- Reason -->
+      <div class="mcm-reason-group">
+        <label class="mcm-reason-label">Reason <span class="mcm-optional">(optional)</span></label>
+        <textarea
+          class="mcm-reason-input"
+          rows="2"
+          placeholder="e.g. Scorekeeper error, incorrect entry…"
+          [value]="reason()"
+          (input)="onReasonChange($any($event.target).value)"
+          [disabled]="saving()"></textarea>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (error()) {
+      <div class="mcm-error">
+        <span>⚠</span> {{ error() }}
+      </div>
+    }
+
+    <!-- Footer -->
+    <div class="mcm-footer">
+      <button class="mcm-btn-cancel" data-cy="cancel-btn" (click)="onCancel()" [disabled]="saving()">Cancel</button>
+      @if (mode === 'LIVE') {
+        <button class="mcm-btn-complete" data-cy="complete-match-btn" (click)="completeMatch()" [disabled]="saving()">
+          @if (saving()) {
+            <span class="mcm-spinner"></span> Completing…
+          } @else {
+            ✓ Complete Match
+          }
+        </button>
+      } @else {
+        <button
+          class="mcm-btn-save"
+          data-cy="save-correction-btn"
+          (click)="onSaveCorrection()"
+          [disabled]="saving() || !isCorrectValid()">
+          @if (saving()) {
+            <span class="mcm-spinner"></span> Saving…
+          } @else {
+            Save & Update Bracket
+          }
+        </button>
+      }
+    </div>
+
+  </div>
+</div>

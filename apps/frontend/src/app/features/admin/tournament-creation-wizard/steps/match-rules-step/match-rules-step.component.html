@@ -1,0 +1,49 @@
+<div class="match-rules-step">
+
+  <div class="step-header">
+    <h2 class="step-title">Match Rules</h2>
+    <p class="step-subtitle">Configure the match format for each round of the tournament.</p>
+  </div>
+
+  @if (loading()) {
+    <div class="rounds-loading">
+      <div class="loading-spinner"></div>
+      <p>Loading round configuration…</p>
+    </div>
+  } @else if (roundFormats().length === 0) {
+    <div class="rounds-empty">
+      <p>⚠️ Could not load round configuration.</p>
+      <p class="rounds-empty-hint">
+        Make sure you selected a tournament format and max players in Step 1.
+      </p>
+      <button class="btn-retry" (click)="loadDefaults()">Retry</button>
+    </div>
+  } @else {
+    <div class="rounds-config">
+      @for (round of roundFormats(); track round.round_number) {
+        <div class="round-row">
+          <div class="round-info">
+            <span class="round-badge">R{{ round.round_number }}</span>
+            <span class="round-name">{{ round.round_name }}</span>
+          </div>
+          <select class="format-select"
+                  [value]="round.match_format"
+                  (change)="updateFormat(round.round_number, $any($event.target).value)">
+            @for (opt of FORMAT_OPTIONS; track opt.value) {
+              <option [value]="opt.value" [selected]="opt.value === round.match_format">
+                {{ opt.label }}
+              </option>
+            }
+          </select>
+          <span class="format-description">{{ getFormatDescription(round.match_format) }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="rounds-info-banner">
+      ℹ️ These formats will be applied to all matches in each round.
+      You can update them later from the tournament settings.
+    </div>
+  }
+
+</div>

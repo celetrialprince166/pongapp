@@ -1,0 +1,140 @@
+<div class="pa-page">
+
+  <!-- Page Header -->
+  <div class="pa-header-card">
+    <div class="pa-header-left">
+      <div class="pa-header-icon">⚡</div>
+      <div>
+        <h1 class="pa-title">Point Allocation</h1>
+        <p class="pa-subtitle">Configure how points are awarded for tournament and match results</p>
+      </div>
+    </div>
+    <div class="pa-header-actions">
+      @if (isDirty()) {
+        <button class="pa-btn-discard" (click)="onDiscard()" [disabled]="saving()">
+          Discard
+        </button>
+      }
+      <button
+        class="pa-btn-save"
+        (click)="onSave()"
+        [disabled]="saving() || !isDirty()">
+        @if (saving()) {
+          <span class="pa-spinner"></span> Saving…
+        } @else {
+          Save Changes
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Backend Pending Banner -->
+  <div class="pa-pending-banner">
+    <span class="pa-pending-icon">⚠</span>
+    <div>
+      <p class="pa-pending-title">Backend endpoint pending</p>
+      <p class="pa-pending-body">
+        GET/PUT /api/point-allocations/ are not yet implemented.
+        Mock data is shown. Changes will not persist until the backend is available.
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="pa-loading">
+      <div class="pa-spinner-lg"></div>
+      <p>Loading allocation rules…</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (error() && !loading()) {
+    <div class="pa-error-banner">
+      <span>⚠</span> {{ error() }}
+    </div>
+  }
+
+  <!-- Success -->
+  @if (successMessage()) {
+    <div class="pa-success-banner">
+      <span>✓</span> {{ successMessage() }}
+    </div>
+  }
+
+  <!-- Allocation Rules Table -->
+  @if (!loading()) {
+    <div class="pa-card">
+      <div class="pa-card-header">
+        <h2 class="pa-card-title">Allocation Rules</h2>
+        <span class="pa-card-count">{{ allocations().length }} categories</span>
+      </div>
+
+      <div class="pa-table-wrapper">
+        <table class="pa-table">
+          <thead>
+            <tr>
+              <th class="pa-col-category">Category</th>
+              <th class="pa-col-desc">Description</th>
+              <th class="pa-col-points">Points</th>
+              <th class="pa-col-status">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (allocation of allocations(); track allocation.id; let i = $index) {
+              <tr class="pa-row" [class.pa-row-edited]="editedValues().has(allocation.id)">
+                <td class="pa-col-category">
+                  <div class="pa-category-cell">
+                    <div class="pa-category-dot" [class]="'pa-cat-' + allocation.category.toLowerCase()"></div>
+                    <span class="pa-category-label">{{ allocation.label }}</span>
+                  </div>
+                </td>
+                <td class="pa-col-desc">
+                  <span class="pa-description">{{ allocation.description }}</span>
+                </td>
+                <td class="pa-col-points">
+                  <input
+                    type="number"
+                    class="pa-points-input"
+                    [value]="getDisplayPoints(allocation)"
+                    (input)="onPointsChange(allocation.id, $any($event.target).value)"
+                    min="0"
+                    max="9999"
+                    [disabled]="saving()" />
+                  <span class="pa-pts-label">pts</span>
+                </td>
+                <td class="pa-col-status">
+                  @if (editedValues().has(allocation.id)) {
+                    <span class="pa-badge pa-badge-modified">Modified</span>
+                  } @else {
+                    <span class="pa-badge pa-badge-saved">Saved</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (isDirty()) {
+        <div class="pa-card-footer">
+          <p class="pa-unsaved-note">You have unsaved changes.</p>
+          <div class="pa-footer-actions">
+            <button class="pa-btn-discard" (click)="onDiscard()" [disabled]="saving()">Discard</button>
+            <button
+              class="pa-btn-save"
+              (click)="onSave()"
+              [disabled]="saving()">
+              @if (saving()) {
+                <span class="pa-spinner"></span> Saving…
+              } @else {
+                Save Changes
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

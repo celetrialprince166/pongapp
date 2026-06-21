@@ -1,0 +1,50 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h2>Welcome Back</h2>
+    <p class="subtitle">Enter your credentials to access your account</p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          placeholder="Enter your username"
+          data-cy="login-username-input"
+          [class.error]="loginForm.get('username')?.invalid && loginForm.get('username')?.touched"
+        >
+        <div class="error-msg" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+          Username is required
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Enter your password"
+          data-cy="login-password-input"
+          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        >
+        <div class="error-msg" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          Password is required
+        </div>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage()" data-cy="login-error-msg">
+        {{ errorMessage() }}
+      </div>
+
+      <button type="submit" data-cy="login-submit-btn" [disabled]="loginForm.invalid || isLoading()">
+        {{ isLoading() ? 'Logging in...' : 'Login' }}
+      </button>
+
+      <div class="auth-footer">
+        <p>Don't have an account? <a routerLink="/signup" data-cy="signup-link">Sign up</a></p>
+      </div>
+    </form>
+  </div>
+</div>

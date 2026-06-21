@@ -1,0 +1,475 @@
+<div class="user-management">
+  @if (toast()) {
+    <div class="toast" [class.toast-success]="toast()!.type === 'success'"
+                       [class.toast-error]="toast()!.type === 'error'">
+      {{ toast()!.message }}
+    </div>
+  }
+  <!-- Header Actions -->
+  <div class="header-actions-row">
+    <button class="btn-primary" data-cy="add-user-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Add New User
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-banner">
+      <span class="error-message">{{ error() }}</span>
+      <button class="btn-close" (click)="clearError()">×</button>
+    </div>
+  }
+
+  <!-- Filters -->
+  <div class="filters-row">
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="Search users..."
+        class="search-input"
+        [value]="searchTerm()"
+        (input)="onSearchChange($event)">
+    </div>
+
+    <select
+      class="filter-select"
+      [value]="roleFilter()"
+      (change)="onRoleFilterChange($any($event.target).value)">
+      <option value="all">All Roles</option>
+      <option value="ADMIN">Admin</option>
+      <option value="PLAYER">Player</option>
+      <option value="MODERATOR">Moderator</option>
+    </select>
+
+    <select
+      class="filter-select"
+      [value]="statusFilter()"
+      (change)="onStatusFilterChange($any($event.target).value)">
+      <option value="all">All Statuses</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading users...</p>
+    </div>
+  }
+
+  <!-- Users Table -->
+  @else if (users().length > 0) {
+    <div class="table-container" data-cy="user-list">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr data-cy="user-row">
+              <!-- User Column with Avatar -->
+              <td class="user-cell">
+                <img
+                  [src]="getUserAvatar(user)"
+                  [alt]="user.username"
+                  class="user-avatar">
+                <div class="user-info">
+                  <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                  <div class="user-username">@{{ user.username }}</div>
+                  <div class="user-email">{{ user.email }}</div>
+                </div>
+              </td>
+
+              <!-- Role Badge -->
+              <td>
+                <span data-cy="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+                  {{ getRoleLabel(user.role) }}
+                </span>
+              </td>
+
+              <!-- Status -->
+              <td>
+                <div class="status-container">
+                  <span
+                    class="status-dot"
+                    [class.status-active]="user.isActive"
+                    [class.status-inactive]="!user.isActive"></span>
+                  <span data-cy="status-label" class="status-label">
+                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Last Login -->
+              <td class="last-login">{{ getRelativeTime(user.lastLogin) }}</td>
+
+              <!-- Actions -->
+              <td class="actions-cell">
+                <button
+                  class="action-btn edit-btn"
+                  data-cy="btn-edit-role"
+                  (click)="openEditRoleModal(user)"
+                  title="Edit role"
+                  aria-label="Edit role">
+                  <lucide-icon [img]="Edit" [size]="16"></lucide-icon>
+                </button>
+                <button
+                  class="action-btn key-btn"
+                  data-cy="btn-reset-password"
+                  (click)="openResetPasswordModal(user)"
+                  title="Reset password"
+                  aria-label="Reset password">
+                  <lucide-icon [img]="Key" [size]="16"></lucide-icon>
+                </button>
+                <button
+                  class="action-btn status-btn"
+                  data-cy="btn-toggle-status"
+                  (click)="openStatusModal(user)"
+                  [title]="user.isActive ? 'Deactivate user' : 'Activate user'"
+                  [attr.aria-label]="user.isActive ? 'Deactivate user' : 'Activate user'">
+                  <lucide-icon [img]="user.isActive ? Unlock : Lock" [size]="16"></lucide-icon>
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  data-cy="btn-delete"
+                  (click)="openDeleteModal(user)"
+                  title="Delete user"
+                  aria-label="Delete user">
+                  <lucide-icon [img]="Trash2" [size]="16"></lucide-icon>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-bar">
+      <div data-cy="pagination-info" class="pagination-info">
+        Showing {{ minOf((currentPage() - 1) * pageSize + 1, totalCount()) }}
+        to {{ minOf(currentPage() * pageSize, totalCount()) }}
+        of {{ totalCount() }} users
+      </div>
+      @if (totalPages() > 1) {
+        <div class="pagination-controls">
+          <button
+            class="page-btn"
+            data-cy="page-btn-prev"
+            [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)">
+            &lsaquo; Prev
+          </button>
+          @for (page of pageNumbers(); track page) {
+            <button
+              class="page-btn"
+              data-cy="page-btn"
+              [class.page-btn-active]="page === currentPage()"
+              (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          }
+          <button
+            class="page-btn"
+            data-cy="page-btn-next"
+            [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)">
+            Next &rsaquo;
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else {
+    <div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <h3 class="empty-title">No Users Found</h3>
+      <p class="empty-message">
+        @if (searchTerm() || roleFilter() !== 'all' || statusFilter() !== 'all') {
+          No users match your filter criteria.
+        } @else {
+          Get started by adding your first user.
+        }
+      </p>
+      @if (!searchTerm() && roleFilter() === 'all' && statusFilter() === 'all') {
+        <button class="btn-primary" (click)="openCreateModal()">
+          Add First User
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Create User Modal -->
+  @if (showCreateModal()) {
+    <div class="modal-overlay" (click)="closeCreateModal()">
+      <div class="modal-content" data-cy="user-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-block">
+            <h2 data-cy="modal-title" class="modal-title">Add New User</h2>
+            <p data-cy="modal-subtitle" class="modal-subtitle">A username will be auto-generated and login credentials will be emailed to the player.</p>
+          </div>
+          <button class="modal-close" (click)="closeCreateModal()">×</button>
+        </div>
+
+        <form class="modal-form" (submit)="$event.preventDefault(); onCreateUser()">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name *</label>
+              <input
+                type="text"
+                class="form-input"
+                data-cy="input-first-name"
+                [value]="userForm().firstName"
+                (input)="updateForm('firstName', $event)"
+                [class.error]="formErrors()['firstName']"
+                placeholder="John">
+              @if (formErrors()['firstName']) {
+                <span class="error-text">{{ formErrors()['firstName'] }}</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Last Name *</label>
+              <input
+                type="text"
+                class="form-input"
+                data-cy="input-last-name"
+                [value]="userForm().lastName"
+                (input)="updateForm('lastName', $event)"
+                [class.error]="formErrors()['lastName']"
+                placeholder="Doe">
+              @if (formErrors()['lastName']) {
+                <span class="error-text">{{ formErrors()['lastName'] }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input
+              type="email"
+              class="form-input"
+              data-cy="input-email"
+              [value]="userForm().email"
+              (input)="updateForm('email', $event)"
+              [class.error]="formErrors()['email']"
+              placeholder="john@example.com">
+            @if (formErrors()['email']) {
+              <span data-cy="error-email" class="error-text">{{ formErrors()['email'] }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Role *</label>
+            <select
+              class="form-select"
+              data-cy="select-role"
+              [value]="userForm().role"
+              (change)="updateForm('role', $event)">
+              <option value="PLAYER">Player</option>
+              <option value="MODERATOR">Moderator</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+
+          <div class="info-box">
+            ℹ️ Username will be auto-generated as <strong>FirstnameLastname</strong>.
+            Login credentials will be sent to the provided email address.
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeCreateModal()">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary" data-cy="btn-create-user">
+              Create User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Edit Role Modal -->
+  @if (showEditRoleModal() && selectedUser()) {
+    <div class="modal-overlay" (click)="closeEditRoleModal()">
+      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Edit User Role</h2>
+          <button class="modal-close" (click)="closeEditRoleModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+          <p>Change role for <strong>{{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}</strong></p>
+
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <select
+              class="form-select"
+              data-cy="role-select"
+              [(ngModel)]="newRole"
+              name="newRole">
+              <option value="PLAYER">Player</option>
+              <option value="MODERATOR">Moderator</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeEditRoleModal()">
+            Cancel
+          </button>
+          <button type="button" class="btn-primary" data-cy="btn-update-role" (click)="onUpdateRole()">
+            Update Role
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Reset Password Modal -->
+  @if (showResetPasswordModal()) {
+    <div class="modal-overlay" (click)="closeResetPasswordModal()">
+      <div class="modal-container" (click)="$event.stopPropagation()">
+
+        <div class="modal-header">
+          <div class="modal-title-block">
+            <h2 class="modal-title">Reset Password</h2>
+            <p class="modal-subtitle">
+              A new password will be automatically generated and
+              sent to the user's email address.
+            </p>
+          </div>
+          <button class="close-btn" (click)="closeResetPasswordModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="reset-confirm-box">
+            <div class="reset-user-info">
+              <div class="reset-avatar">
+                {{ getInitials(selectedUser()?.firstName, selectedUser()?.lastName) }}
+              </div>
+              <div>
+                <div class="reset-user-name">
+                  {{ selectedUser()?.firstName }} {{ selectedUser()?.lastName }}
+                </div>
+                <div class="reset-user-email">{{ selectedUser()?.email }}</div>
+              </div>
+            </div>
+            <div class="reset-info-banner">
+              ℹ️ A secure password will be generated and emailed to
+              <strong>{{ selectedUser()?.email }}</strong>. The user
+              must log in and change it after receiving the email.
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-cancel"
+                  (click)="closeResetPasswordModal()"
+                  [disabled]="resettingPassword()">
+            Cancel
+          </button>
+          <button class="btn-reset-confirm"
+                  (click)="onResetPassword()"
+                  [disabled]="resettingPassword()">
+            @if (resettingPassword()) {
+              Sending...
+            } @else {
+              Reset Password
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- Status Change Modal (Activate/Deactivate) -->
+  @if (showStatusModal() && selectedUser()) {
+    <div class="modal-overlay" (click)="closeStatusModal()">
+      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            {{ selectedUser()!.isActive ? 'Deactivate' : 'Activate' }} User
+          </h2>
+          <button class="modal-close" (click)="closeStatusModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+          @if (selectedUser()!.isActive) {
+            <p>Are you sure you want to deactivate <strong>{{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}</strong>?</p>
+
+            <div class="form-group">
+              <label class="form-label">Reason for deactivation *</label>
+              <textarea
+                class="form-textarea"
+                data-cy="deactivation-reason"
+                [(ngModel)]="deactivationReason"
+                name="reason"
+                rows="3"
+                placeholder="Provide a reason for deactivation"></textarea>
+            </div>
+
+            <p class="warning-text">This user will not be able to log in until reactivated.</p>
+          } @else {
+            <p>Are you sure you want to reactivate <strong>{{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}</strong>?</p>
+            <p class="info-text">This user will be able to log in again.</p>
+          }
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeStatusModal()">
+            Cancel
+          </button>
+          <button
+            type="button"
+            data-cy="btn-confirm-status"
+            [class.btn-danger]="selectedUser()!.isActive"
+            [class.btn-primary]="!selectedUser()!.isActive"
+            (click)="onToggleStatus()">
+            {{ selectedUser()!.isActive ? 'Deactivate' : 'Activate' }} User
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteModal() && selectedUser()) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Delete User</h2>
+          <button class="modal-close" (click)="closeDeleteModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+          <p>Are you sure you want to delete <strong>{{ selectedUser()!.firstName }} {{ selectedUser()!.lastName }}</strong>?</p>
+          <p class="warning-text">This action cannot be undone. All user data will be permanently deleted.</p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeDeleteModal()">
+            Cancel
+          </button>
+          <button type="button" class="btn-danger" data-cy="btn-confirm-delete" (click)="onDeleteUser()">
+            Delete User
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

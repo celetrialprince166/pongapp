@@ -1,0 +1,14 @@
+{
+  "season": {
+    "name": "Cypress Test Season",
+    "start_date": "2026-04-01",
+    "end_date": "2026-06-30"
+  },
+  "tournament": {
+    "name": "Cypress Test Tournament",
+    "format": "SINGLE_ELIMINATION",
+    "match_format": "BEST_OF_3",
+    "max_players": 4,
+    "location": "Test Arena"
+  }
+}

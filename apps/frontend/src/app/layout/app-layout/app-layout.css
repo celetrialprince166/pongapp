@@ -1,0 +1,53 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--admin-bg-primary);
+}
+
+.content {
+  flex-grow: 1;
+  padding: 2rem;
+  margin-left: 16rem;
+  /* Match sidebar width */
+  width: calc(100% - 16rem);
+  box-sizing: border-box;
+  background: var(--admin-bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Theme Toggle Button — fixed bottom-right */
+.theme-toggle {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 50%;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: transform 150ms ease;
+  z-index: 50;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+}
+
+.theme-toggle .material-icons-outlined {
+  font-size: 20px;
+  line-height: 1;
+}

@@ -1,0 +1,92 @@
+# Local development stack for pongapp (monorepo).
+# Mirrors the cloud tiers so the app is verified locally before any ECS/EKS deploy.
+#   frontend (Angular/nginx) -> backend (Django/daphne) -> postgres + redis
+# Values like POSTGRES_USER/PASSWORD/DB are interpolated from the root .env file.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ttl_postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ttl_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: ttl_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # dj-database-url takes precedence; unambiguous local Postgres connection
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - USE_POSTGRES=True
+      - POSTGRES_HOST=postgres   # used by docker-entrypoint.sh readiness wait
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8080:8000"
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: ttl_frontend
+    restart: unless-stopped
+    environment:
+      - BACKEND_HOST=backend     # nginx proxy target (envsubst); ECS uses backend.pongapp.local
+      - BACKEND_PORT=8000
+    ports:
+      - "80:80"
+    volumes:
+      - media_data:/usr/share/nginx/html/media:ro
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+  static_data:

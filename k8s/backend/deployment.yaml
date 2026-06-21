@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: table-tennis
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      serviceAccountName: table-tennis-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000  # non-root user from Dockerfile
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: backend
+          image: franzjameskaba/ttl-backend:latest
+          command: ["sh", "-c", "python manage.py migrate --noinput && daphne -b 0.0.0.0 -p 8000 table_tennis_app.asgi:application"]
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: env-config
+            - secretRef:
+                name: app-secrets
+            - secretRef:
+                name: db-credentials
+          # Health checks (using endpoints that exist in current image)
+          livenessProbe:
+            httpGet:
+              path: /api/schema/
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/schema/
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Resource limits
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          # Security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          # Volume mounts
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+            - name: static
+              mountPath: /app/staticfiles
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: backend-media-pvc
+        - name: static
+          persistentVolumeClaim:
+            claimName: backend-static-pvc

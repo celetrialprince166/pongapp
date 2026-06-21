@@ -1,0 +1,568 @@
+/**
+ * Player Management Component Styles
+ * Theme-aware styles using CSS variables for light/dark mode support
+ */
+
+/* Container */
+.player-management {
+  padding: 2rem;
+  background-color: var(--admin-bg-primary);
+  min-height: 100vh;
+  color: var(--admin-text-primary);
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Search Box */
+.search-box {
+  position: relative;
+}
+
+.search-input {
+  background-color: var(--admin-bg-tertiary);
+  border: 1px solid var(--admin-border-primary);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--admin-text-primary);
+  width: 300px;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--admin-border-focus);
+}
+
+.search-input::placeholder {
+  color: var(--admin-text-disabled);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--admin-primary-500);
+  color: var(--admin-text-inverse);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--admin-primary-600);
+}
+
+.btn-secondary {
+  background-color: var(--admin-bg-hover);
+  color: var(--admin-text-inverse);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--admin-bg-active);
+}
+
+.btn-danger {
+  background-color: var(--admin-danger-500);
+  color: var(--admin-text-inverse);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-danger:hover {
+  background-color: var(--admin-danger-600);
+}
+
+.btn-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Error Banner */
+.error-banner {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--admin-border-error);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-message {
+  color: var(--admin-danger-300);
+  font-size: 0.875rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--admin-danger-300);
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+}
+
+.btn-close:hover {
+  color: var(--admin-text-primary);
+}
+
+/* Filter Tabs */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--admin-border-primary);
+}
+
+.filter-tab {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-tertiary);
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.filter-tab:hover {
+  color: var(--admin-text-primary);
+}
+
+.filter-tab.active {
+  color: var(--admin-primary-500);
+}
+
+.filter-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--admin-primary-500);
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  color: var(--admin-text-tertiary);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--admin-border-primary);
+  border-top-color: var(--admin-primary-500);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Table Container */
+.table-container {
+  background-color: var(--admin-bg-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+/* Players Table */
+.players-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.players-table thead {
+  background-color: var(--admin-bg-secondary);
+}
+
+.players-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--admin-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.players-table tbody tr {
+  border-bottom: 1px solid var(--admin-border-primary);
+  transition: background-color 0.2s;
+}
+
+.players-table tbody tr:hover {
+  background-color: var(--admin-bg-hover);
+}
+
+.players-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.players-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--admin-text-primary);
+}
+
+/* Player Cell */
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.player-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-weight: 600;
+  color: var(--admin-text-primary);
+}
+
+.player-username {
+  font-size: 0.75rem;
+  color: var(--admin-text-tertiary);
+}
+
+/* ELO Rating */
+.elo-rating {
+  font-weight: 700;
+  color: var(--admin-primary-500);
+  font-size: 1rem;
+}
+
+/* League Badges */
+.league-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.league-pro {
+  background-color: #8B5CF6;
+  color: white;
+}
+
+.league-amateur {
+  background-color: var(--admin-success-500);
+  color: var(--admin-text-inverse);
+}
+
+/* Matches Info */
+.matches-info {
+  color: var(--admin-text-tertiary);
+}
+
+/* Actions Cell */
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: transform 0.2s;
+}
+
+.action-btn:hover {
+  transform: scale(1.2);
+}
+
+.edit-btn {
+  color: var(--admin-primary-500);
+}
+
+.delete-btn {
+  color: var(--admin-danger-500);
+}
+
+/* Pagination Info */
+.pagination-info {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--admin-text-tertiary);
+  padding: 1rem 0;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-message {
+  font-size: 1rem;
+  color: var(--admin-text-tertiary);
+  margin: 0 0 1.5rem 0;
+  max-width: 400px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: var(--admin-bg-tertiary);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modal-small {
+  max-width: 400px;
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--admin-border-primary);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--admin-text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: var(--admin-text-primary);
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 1.5rem;
+  color: var(--admin-text-primary);
+}
+
+.modal-body p {
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.warning-text {
+  color: var(--admin-warning-500);
+  font-weight: 600;
+}
+
+/* Modal Form */
+.modal-form {
+  padding: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-tertiary);
+}
+
+.form-input,
+.form-select {
+  background-color: var(--admin-bg-secondary);
+  border: 1px solid var(--admin-border-primary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--admin-text-primary);
+  transition: border-color 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--admin-border-focus);
+}
+
+.form-input.error {
+  border-color: var(--admin-border-error);
+}
+
+.error-text {
+  font-size: 0.75rem;
+  color: var(--admin-danger-300);
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--admin-border-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .player-management {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    flex-direction: column;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .players-table {
+    min-width: 800px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+
+.header-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}

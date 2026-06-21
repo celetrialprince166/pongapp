@@ -1,0 +1,67 @@
+<div class="overtime-ratings-card">
+    <div class="card-header">
+        <h3 class="card-title">Rating Over Time</h3>
+        <div class="time-period-tabs">
+            <button class="period-tab" [class.active]="timePeriod() === '1W'" (click)="setTimePeriod('1W')">
+                1W
+            </button>
+            <button class="period-tab" [class.active]="timePeriod() === '1M'" (click)="setTimePeriod('1M')">
+                1M
+            </button>
+            <button class="period-tab" [class.active]="timePeriod() === 'ALL'" (click)="setTimePeriod('ALL')">
+                All
+            </button>
+        </div>
+    </div>
+
+    <div class="chart-container" *ngIf="hasData">
+        <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" preserveAspectRatio="xMidYMid meet">
+            <!-- Grid lines -->
+            <line *ngFor="let i of [0, 1, 2, 3, 4]"
+                  [attr.x1]="padding"
+                  [attr.y1]="padding + i * (chartHeight - 2 * padding) / 4"
+                  [attr.x2]="chartWidth - padding"
+                  [attr.y2]="padding + i * (chartHeight - 2 * padding) / 4"
+                  stroke="var(--border-default, #e0e0e0)"
+                  stroke-width="1"
+                  opacity="0.3"/>
+
+            <!-- Chart line -->
+            <polyline [attr.points]="chartPoints"
+                      fill="none"
+                      stroke="var(--color-primary)"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"/>
+
+            <!-- Data points -->
+            <circle *ngFor="let point of chartPoints.split(' ')"
+                    [attr.cx]="point.split(',')[0]"
+                    [attr.cy]="point.split(',')[1]"
+                    r="4"
+                    fill="var(--color-primary)"/>
+
+            <!-- Y-axis labels -->
+            <text [attr.x]="padding - 10"
+                  [attr.y]="padding"
+                  text-anchor="end"
+                  alignment-baseline="middle"
+                  font-size="12"
+                  fill="var(--text-secondary, #666)">
+                {{maxRating}}
+            </text>
+            <text [attr.x]="padding - 10"
+                  [attr.y]="chartHeight - padding"
+                  text-anchor="end"
+                  alignment-baseline="middle"
+                  font-size="12"
+                  fill="var(--text-secondary, #666)">
+                {{minRating}}
+            </text>
+        </svg>
+    </div>
+
+    <div class="empty-state" *ngIf="!hasData && !isLoading()">
+        <p class="placeholder-text">No rating history available yet. Play some matches to see your rating progression!</p>
+    </div>
+</div>

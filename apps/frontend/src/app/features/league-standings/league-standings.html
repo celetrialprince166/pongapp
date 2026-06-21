@@ -1,0 +1,157 @@
+<div class="standings-container" data-cy="standings-page">
+    <div class="standings-header">
+        <h1 class="page-title">Player Rankings</h1>
+        <p class="page-subtitle">View player rankings in all leagues.</p>
+    </div>
+
+    <!-- League Filter Tabs -->
+    <div class="league-tabs">
+        <button class="tab-button" [class.active]="activeLeague() === 'ALL'" (click)="setActiveLeague('ALL')">
+            All
+        </button>
+        <button class="tab-button" [class.active]="activeLeague() === 'PRO'" (click)="setActiveLeague('PRO')">
+            PRO
+        </button>
+        <button class="tab-button" [class.active]="activeLeague() === 'AMATEUR'" (click)="setActiveLeague('AMATEUR')">
+            Amateur
+        </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search by player name..." (input)="onSearchChange($event)"
+            [value]="searchTerm()">
+    </div>
+
+    <!-- Top 3 Podium -->
+    <div class="top-3-podium" *ngIf="top3Players().length >= 3 && !isLoading()">
+        <h2 class="section-title">Top Contenders</h2>
+        <div class="podium-container">
+            <!-- 2nd Place -->
+            <div class="podium-item second" *ngIf="top3Players()[1]">
+                <div class="rank-badge silver">#2</div>
+                <div class="player-avatar">
+                    <img [src]="top3Players()[1].avatar || 'assets/default-avatar.png'" alt="Player avatar">
+                </div>
+                <div class="player-name">
+                    {{ top3Players()[1].first_name && top3Players()[1].last_name ?
+                       top3Players()[1].first_name + ' ' + top3Players()[1].last_name :
+                       top3Players()[1].username }}
+                </div>
+                <div class="player-rating">{{top3Players()[1].current_rating}} ELO</div>
+                <div class="player-badges">
+                    <span class="badge" [ngClass]="getLeagueBadgeClass(top3Players()[1].league)">
+                        {{top3Players()[1].league}}
+                    </span>
+                    <span class="badge badge-wins">{{top3Players()[1].wins}}W {{top3Players()[1].losses}}L</span>
+                </div>
+            </div>
+
+            <!-- 1st Place -->
+            <div class="podium-item first" *ngIf="top3Players()[0]">
+                <div class="rank-badge gold">#1</div>
+                <div class="player-avatar large">
+                    <img [src]="top3Players()[0].avatar || 'assets/default-avatar.png'" alt="Player avatar">
+                </div>
+                <div class="player-name">
+                    {{ top3Players()[0].first_name && top3Players()[0].last_name ?
+                       top3Players()[0].first_name + ' ' + top3Players()[0].last_name :
+                       top3Players()[0].username }}
+                </div>
+                <div class="player-rating">{{top3Players()[0].current_rating}} ELO</div>
+                <div class="player-badges">
+                    <span class="badge" [ngClass]="getLeagueBadgeClass(top3Players()[0].league)">
+                        {{top3Players()[0].league}}
+                    </span>
+                    <span class="badge badge-wins">{{top3Players()[0].wins}}W {{top3Players()[0].losses}}L</span>
+                </div>
+            </div>
+
+            <!-- 3rd Place -->
+            <div class="podium-item third" *ngIf="top3Players()[2]">
+                <div class="rank-badge bronze">#3</div>
+                <div class="player-avatar">
+                    <img [src]="top3Players()[2].avatar || 'assets/default-avatar.png'" alt="Player avatar">
+                </div>
+                <div class="player-name">
+                    {{ top3Players()[2].first_name && top3Players()[2].last_name ?
+                       top3Players()[2].first_name + ' ' + top3Players()[2].last_name :
+                       top3Players()[2].username }}
+                </div>
+                <div class="player-rating">{{top3Players()[2].current_rating}} ELO</div>
+                <div class="player-badges">
+                    <span class="badge" [ngClass]="getLeagueBadgeClass(top3Players()[2].league)">
+                        {{top3Players()[2].league}}
+                    </span>
+                    <span class="badge badge-wins">{{top3Players()[2].wins}}W {{top3Players()[2].losses}}L</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Roster Table -->
+    <div class="roster-section">
+        <h2 class="section-title">Full Roster</h2>
+
+        <div class="table-container" *ngIf="!isLoading()">
+            <table class="roster-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>ELO Rating</th>
+                        <th>Win Rate</th>
+                        <th>Badges</th>
+                        <th>Matches Played</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let player of paginatedPlayers()" class="table-row" data-cy="standing-row">
+                        <td class="rank-cell" data-cy="standing-rank">#{{player.rank}}</td>
+                        <td class="player-cell">
+                            <div class="player-info">
+                                <img class="player-avatar-small"
+                                    [src]="player.avatar || 'assets/default-avatar.png'" alt="Avatar">
+                                <span class="player-name-text" data-cy="standing-player-name">{{player.username}}</span>
+                            </div>
+                        </td>
+                        <td class="rating-cell">
+                            <span class="rating-value" data-cy="standing-rating">{{player.current_rating}}</span>
+                            <span class="rating-change" *ngIf="player.highest_rating && player.current_rating !== player.highest_rating">
+                                ↑
+                            </span>
+                        </td>
+                        <td class="win-rate-cell">{{(player.win_rate * 100).toFixed(0)}}%</td>
+                        <td class="badges-cell">
+                            <span class="badge" [ngClass]="getLeagueBadgeClass(player.league)">
+                                {{player.league}}
+                            </span>
+                        </td>
+                        <td class="matches-cell">{{player.total_matches}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="paginatedPlayers().length === 0">
+                <p>No players found matching your criteria.</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages() > 1">
+            <button class="page-btn" [disabled]="currentPage() === 1" (click)="previousPage()">
+                Previous
+            </button>
+            <span class="page-info">Page {{currentPage()}} of {{totalPages()}}</span>
+            <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">
+                Next
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoading()">
+            <p>Loading leaderboard...</p>
+        </div>
+    </div>
+</div>

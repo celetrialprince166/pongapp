@@ -1,0 +1,155 @@
+.match-rules-step {
+  padding: 0.5rem 0;
+}
+
+.step-header {
+  margin-bottom: 1.5rem;
+}
+
+.step-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem;
+}
+
+.step-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ── Rounds list ── */
+.rounds-config {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.round-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  transition: border-color 0.15s;
+}
+.round-row:hover { border-color: #93c5fd; }
+
+.round-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.round-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: #eff6ff;
+  color: #2563eb;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.round-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+}
+
+.format-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  background: #fff;
+  cursor: pointer;
+  width: 100%;
+}
+.format-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.format-description {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+/* ── Info banner ── */
+.rounds-info-banner {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+}
+
+/* ── Loading ── */
+.rounds-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Empty / error ── */
+.rounds-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.rounds-empty-hint {
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+  color: #9ca3af;
+}
+
+.btn-retry {
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-retry:hover { background: #1d4ed8; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .round-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}

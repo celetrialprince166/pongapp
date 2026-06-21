@@ -1,0 +1,29 @@
+<div class="dashboard-header">
+  <h1 class="dashboard-title">Player Dashboard</h1>
+  <div class="dashboard-actions">
+    <app-action-buttons class="challenge-player-button" label="Challenge Player" routerLink="/challenge-hub">
+      <lucide-icon [name]="challengeIcon" icon></lucide-icon>
+    </app-action-buttons>
+
+    <app-action-buttons class="log-a-match-button" label="Log Match" variant="secondary">
+      <lucide-icon [name]="calendarIcon" icon></lucide-icon>
+    </app-action-buttons>
+  </div>
+</div>
+
+<div class="dashboard-main-content">
+  <div class="dashboard-left-column">
+    <div class="dashboard-header-row">
+      <app-welcome-box class="welcome-box-container"></app-welcome-box>
+      <app-rating-box class="rating-box-container"></app-rating-box>
+    </div>
+    <app-overtime-ratings></app-overtime-ratings>
+    <app-recent-matches></app-recent-matches>
+  </div>
+
+  <div class="dashboard-right-column">
+    <app-season-progress></app-season-progress>
+    <app-active-challenges></app-active-challenges>
+    <app-upcoming-tournaments></app-upcoming-tournaments>
+  </div>
+</div>

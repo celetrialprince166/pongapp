@@ -1,0 +1,136 @@
+/* Wizard Stepper Container */
+.wizard-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  margin-bottom: 3rem;
+}
+
+/* Step Container */
+.step-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.step-container.clickable {
+  cursor: pointer;
+}
+
+.step-container.clickable:hover .step-circle.completed {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(29, 140, 240, 0.3);
+}
+
+/* Step Circle */
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+/* Active Step */
+.step-circle.active {
+  background-color: var(--admin-primary-500);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+}
+
+/* Completed Step */
+.step-circle.completed {
+  background-color: var(--color-accent);
+  color: #0f1922;
+  border: none;
+}
+
+.check-icon {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Upcoming Step */
+.step-circle.upcoming {
+  background: white;
+  border: 2px solid #E2E8F0;
+  color: #94A3B8;
+}
+
+/* Step Label */
+.step-label {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.step-label.active {
+  color: #0F172A;
+}
+
+.step-label.completed {
+  color: #64748B;
+}
+
+.step-label.upcoming {
+  color: #94A3B8;
+}
+
+/* Connection Line */
+.stepper-line {
+  height: 2px;
+  background-color: #E2E8F0;
+  flex: 1;
+  margin: 0 1rem;
+  margin-bottom: 1.5rem;
+  transition: background-color 0.3s;
+}
+
+.stepper-line.active {
+  background-color: var(--admin-primary-500);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .wizard-stepper {
+    padding: 0;
+  }
+
+  .step-label {
+    font-size: 12px;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .stepper-line {
+    margin: 0 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .step-label {
+    display: none;
+  }
+
+  .wizard-stepper {
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .stepper-line {
+    max-width: 60px;
+  }
+}

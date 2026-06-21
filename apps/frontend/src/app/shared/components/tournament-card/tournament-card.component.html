@@ -1,0 +1,88 @@
+<div class="tournament-card" data-cy="tournament-card" [class.card-closed]="tournament().isFull" (click)="onClick()">
+
+  <!-- Hero Section -->
+  <div class="card-hero" [style.background-color]="tournament().heroColor">
+    @if (tournament().heroImage) {
+      <img
+        [src]="tournament().heroImage"
+        [alt]="tournament().name + ' illustration'"
+        class="hero-image"
+      />
+      <div class="hero-overlay"></div>
+    } @else {
+      <!-- Branded placeholder: trophy icon centered on light gray bg -->
+      <div class="hero-placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16"/>
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+        </svg>
+      </div>
+    }
+
+    <span class="status-badge" data-cy="tournament-status-badge" [class]="getStatusClass()">
+      {{ getStatusLabel() }}
+    </span>
+  </div>
+
+  <!-- Card Body -->
+  <div class="card-body">
+    <h3 class="card-title" data-cy="card-name">{{ tournament().name }}</h3>
+
+    <div class="card-location">
+      <!-- MapPin icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="location-icon">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      {{ tournament().location }}
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-item">
+        <p class="stat-label">Prize</p>
+        <p class="stat-value">{{ tournament().prize }}</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-label">Players</p>
+        <p class="stat-value">{{ tournament().participants }}</p>
+      </div>
+      <div class="stat-item">
+        <p class="stat-label">Format</p>
+        <p class="stat-value">{{ tournament().format }}</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <div class="card-date">
+        <!-- Calendar icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="date-icon">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        {{ tournament().date }}
+      </div>
+      <div class="footer-actions">
+        @if (tournament().isRegistered) {
+          <span class="badge-registered" data-cy="registered-badge">✓ Registered</span>
+        } @else if (tournament().isFull) {
+          <span class="badge-capacity-full" data-cy="full-badge">● Full</span>
+        }
+        <button
+          class="btn-primary"
+          data-cy="view-btn"
+          (click)="onClick(); $event.stopPropagation()">
+          View Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

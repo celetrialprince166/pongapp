@@ -1,0 +1,166 @@
+<div class="tournament-overview" data-cy="tournament-overview-page">
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-banner">
+      <span class="error-message">{{ error() }}</span>
+      <button class="btn-close" (click)="clearError()">×</button>
+    </div>
+  }
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="tab-group">
+      <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="onTabChange('all')">
+        All Tournaments
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'regional'" (click)="onTabChange('regional')">
+        Regional
+      </button>
+      <button class="tab-btn" [class.active]="activeTab() === 'national'" (click)="onTabChange('national')">
+        National
+      </button>
+    </div>
+    <div class="search-group">
+      <div class="search-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input
+          class="search-input"
+          data-cy="tournament-search-input"
+          type="text"
+          placeholder="Search tournaments..."
+          [value]="searchQuery()"
+          (input)="onSearchInput($event)"
+        />
+      </div>
+      <button class="filter-icon-btn" aria-label="Filter options">
+        <span class="material-symbols-outlined">tune</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading tournaments...</p>
+    </div>
+  }
+
+  <!-- Tournament Cards Grid -->
+  @else if (tournaments().length > 0) {
+    <div class="tournaments-grid">
+
+      @for (tournament of tournaments(); track tournament.id; let i = $index) {
+        <div
+          class="tournament-card"
+          data-cy="tournament-row"
+          [class.card-dimmed]="isCardDimmed(tournament)"
+          (click)="onViewDetails(tournament.id)"
+        >
+          <!-- Hero Section -->
+          <div class="card-hero" [style.background]="getHeroBg(tournament)">
+            <img [src]="getHeroImage(i)" class="hero-img" alt="">
+            <div class="hero-gradient"></div>
+            <span class="hero-badge" data-cy="tournament-status-badge" [style.background]="getHeroBadge(tournament).color">
+              {{ getHeroBadge(tournament).label }}
+            </span>
+          </div>
+
+          <!-- Content Body -->
+          <div class="card-body">
+            <h3 class="card-name" data-cy="tournament-name-cell">{{ tournament.name }}</h3>
+            <div class="card-location">
+              <span class="material-symbols-outlined location-icon">location_on</span>
+              {{ getLocation(tournament) }}
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+              <div class="stat-cell">
+                <p class="stat-label">Prize</p>
+                <p class="stat-value">{{ tournament.prize_label || '—' }}</p>
+              </div>
+              <div class="stat-cell">
+                <p class="stat-label">Players</p>
+                <p class="stat-value">{{ tournament.participant_count }}/{{ tournament.max_participants }}</p>
+              </div>
+              <div class="stat-cell">
+                <p class="stat-label">Format</p>
+                <p class="stat-value">{{ getFormatAbbr(tournament.tournament_format) }}</p>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="card-footer">
+              <div class="card-date">
+                <span class="material-symbols-outlined">calendar_today</span>
+                {{ formatStartDate(tournament) }}
+              </div>
+              @if (isCardFull(tournament)) {
+                <button class="btn-full-capacity" disabled>Full Capacity</button>
+              } @else {
+                <button
+                  class="btn-view-details"
+                  data-cy="tournament-view-btn"
+                  (click)="$event.stopPropagation(); onViewDetails(tournament.id)"
+                >
+                  View Details
+                </button>
+              }
+            </div>
+          </div>
+
+        </div>
+      }
+
+      <!-- Host Tournament Card -->
+      <div class="host-card" data-cy="create-tournament-btn" (click)="onCreateTournament()">
+        <div class="host-icon-circle">
+          <span class="material-symbols-outlined">add</span>
+        </div>
+        <h3 class="host-title">Host Tournament</h3>
+        <p class="host-subtitle">Create your own custom event and invite players</p>
+      </div>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage() === 1"
+        (click)="onPrevPage()">
+        Previous
+      </button>
+      <span class="pagination-info">
+        Page {{ currentPage() }} of {{ getTotalPages() }} ({{ totalCount() }} total)
+      </span>
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage() === getTotalPages()"
+        (click)="onNextPage()">
+        Next
+      </button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else {
+    <div class="empty-state">
+      <div class="empty-icon">🏆</div>
+      <h3 class="empty-title">No Tournaments Found</h3>
+      <p class="empty-message">
+        @if (activeTab() === 'all') {
+          There are no tournaments at the moment.
+        } @else {
+          No {{ activeTab() }} tournaments to display.
+        }
+      </p>
+      <button class="btn-primary" data-cy="create-tournament-btn" (click)="onCreateTournament()">
+        Create First Tournament
+      </button>
+    </div>
+  }
+
+</div>

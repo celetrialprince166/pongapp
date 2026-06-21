@@ -1,0 +1,55 @@
+<div class="recent-matches-card">
+    <div class="tabs-header">
+        <button class="tab-button" [class.active]="activeTab === 'recent'" (click)="activeTab = 'recent'">Recent
+            Matches</button>
+        <button class="tab-button" [class.active]="activeTab === 'challenges'" (click)="activeTab = 'challenges'">Active
+            Challenges</button>
+    </div>
+
+    <div class="matches-list" *ngIf="activeTab === 'recent'">
+        <div class="match-item" *ngFor="let match of matches()">
+            <div class="match-info">
+                <img class="opponent-avatar" [src]="match.opponentAvatar || 'assets/default-avatar.png'" alt="Opponent">
+                <div class="match-details">
+                    <span class="opponent-name">{{match.opponentName}}</span>
+                    <span class="match-score">Score: {{match.score}}</span>
+                </div>
+            </div>
+            <div class="match-result">
+                <span class="result-text" [class.win]="match.result === 'WIN'"
+                    [class.loss]="match.result === 'LOSS'">{{match.result}}</span>
+                <span class="elo-change" [class.positive]="match.eloChange > 0" [class.negative]="match.eloChange < 0">
+                    {{match.eloChange > 0 ? '+' : ''}}{{match.eloChange}} ELO
+                </span>
+            </div>
+        </div>
+        <div class="empty-state" *ngIf="matches().length === 0 && !isLoading()">
+            <svg class="empty-state-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                <line x1="4" y1="22" x2="4" y2="15"></line>
+            </svg>
+            <p class="empty-state-message">No recent matches found. Challenge a player to get started!</p>
+            <button class="find-opponents-btn" routerLink="/challenge-hub">Find Opponents</button>
+        </div>
+    </div>
+
+    <div class="challenges-list" *ngIf="activeTab === 'challenges'">
+        <div class="challenge-item" *ngFor="let challenge of challenges()">
+            <div class="challenge-info">
+                <img class="opponent-avatar" [src]="challenge.opponentAvatar || 'assets/default-avatar.png'" alt="Opponent">
+                <div class="challenge-details">
+                    <span class="opponent-name">{{challenge.opponentName}}</span>
+                    <span class="challenge-format">{{challenge.format}}</span>
+                </div>
+            </div>
+            <div class="challenge-status">
+                <span class="status-badge" [class.received]="challenge.isReceived" [class.sent]="!challenge.isReceived">
+                    {{challenge.isReceived ? 'Received' : 'Sent'}}
+                </span>
+            </div>
+        </div>
+        <div class="empty-state" *ngIf="challenges().length === 0 && !isLoading()">
+            <p>No active challenges. Send a challenge from the Challenge Hub!</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,817 @@
+<!-- Loading State -->
+@if (loading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Loading tournament...</p>
+  </div>
+}
+
+<!-- Error State -->
+@if (error() && !loading()) {
+  <div class="error-banner">
+    <div class="error-content">
+      <span class="error-icon">⚠</span>
+      <p>{{ error() }}</p>
+    </div>
+    <button (click)="loadTournament()" class="btn-retry">Retry</button>
+  </div>
+}
+
+<!-- Main Content -->
+@if (tournament() && !loading()) {
+  <div class="page-container">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <span class="breadcrumb-link" routerLink="/admin/tournament-overview">Tournaments</span>
+      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-link">{{ tournament()!.name }}</span>
+      <span class="breadcrumb-sep">›</span>
+      <span class="breadcrumb-current">Details</span>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="title-row">
+        <h1 class="tournament-title" data-cy="tournament-title">{{ tournament()!.name }}</h1>
+        <span class="status-pill status-{{ tournament()!.status | lowercase }}" data-cy="tournament-status-badge">
+          {{ getStatusInfo(tournament()!).label }}
+        </span>
+      </div>
+      <div class="meta-row">
+        @if (tournament()!.start_date) {
+          <div class="meta-item">
+            <span class="meta-icon">📅</span>
+            <span>{{ formatDate(tournament()!.start_date) }}</span>
+          </div>
+        }
+        @if (tournament()!.location) {
+          <div class="meta-item">
+            <span class="meta-icon">📍</span>
+            <span>{{ tournament()!.location }}</span>
+          </div>
+        }
+      </div>
+    </header>
+
+    <!-- Action Toolbar -->
+    <div class="action-bar">
+      @if (canStart()) {
+        <button
+          class="btn-action-primary"
+          data-cy="start-tournament-btn"
+          (click)="openStartModal()"
+          [disabled]="actionLoading() !== null">
+          @if (actionLoading() === 'start') {
+            <span class="spinner-small spinner-small--light"></span> Starting...
+          } @else {
+            ▶ Start Tournament Now
+          }
+        </button>
+      }
+      @if (canComplete()) {
+        <button
+          class="btn-action-primary"
+          data-cy="complete-tournament-btn"
+          (click)="openCompleteModal()"
+          [disabled]="actionLoading() !== null">
+          @if (actionLoading() === 'complete') {
+            <span class="spinner-small spinner-small--light"></span> Completing...
+          } @else {
+            ✓ Complete Tournament
+          }
+        </button>
+      }
+      <button
+        class="btn-action-secondary"
+        data-cy="edit-details-btn"
+        (click)="openEditModal()"
+        [disabled]="actionLoading() !== null">
+        ✎ Edit Details
+      </button>
+      <div class="action-bar-spacer"></div>
+      <button
+        class="btn-action-danger"
+        data-cy="delete-tournament-btn"
+        (click)="openDeleteModal()"
+        [disabled]="actionLoading() !== null">
+        🗑 Delete
+      </button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p class="stat-label">Registered Players</p>
+        <div class="stat-value-row">
+          <p class="stat-value">{{ participants().length }}/{{ tournament()!.max_participants }}</p>
+          @if (participants().length >= tournament()!.max_participants) {
+            <span class="full-badge">FULL</span>
+          }
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill"
+               [style.width.%]="tournament()!.max_participants > 0 ? (participants().length / tournament()!.max_participants) * 100 : 0">
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <p class="stat-label">Format</p>
+        <p class="stat-value">{{ formatTournamentFormat(tournament()!.format || tournament()!.tournament_format) }}</p>
+        <p class="stat-sub stat-sub--muted">Fixed Bracket</p>
+      </div>
+
+      <div class="stat-card">
+        <p class="stat-label">Status</p>
+        <p class="stat-value">{{ getStatusInfo(tournament()!).label }}</p>
+        @if (tournament()!.registration_deadline) {
+          <p class="stat-sub">Deadline: {{ formatDate(tournament()!.registration_deadline) }}</p>
+        }
+      </div>
+
+      <div class="stat-card">
+        <p class="stat-label">Rated Event</p>
+        <p class="stat-value">{{ tournament()!.is_rated ? 'Yes' : 'No' }}</p>
+        <p class="stat-sub stat-sub--muted">{{ tournament()!.is_rated ? 'Affects ELO ratings' : 'Unranked' }}</p>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-btn" data-cy="tab-overview" [class.active]="activeTab() === 'overview'" (click)="setTab('overview')">
+        Overview
+      </button>
+      <button class="tab-btn" data-cy="tab-participants" [class.active]="activeTab() === 'participants'" (click)="setTab('participants')">
+        Participants ({{ participants().length }})
+      </button>
+      <button class="tab-btn" data-cy="tab-brackets" [class.active]="activeTab() === 'brackets'" (click)="setTab('brackets')">
+        Matches
+      </button>
+      <button class="tab-btn" data-cy="tab-settings" [class.active]="activeTab() === 'settings'" (click)="setTab('settings')">
+        Settings
+      </button>
+      <button class="tab-btn" data-cy="tab-awards" [class.active]="activeTab() === 'awards'" (click)="setTab('awards')">
+        Awards
+      </button>
+    </div>
+
+    <!-- ===== OVERVIEW TAB ===== -->
+    @if (activeTab() === 'overview') {
+      <div class="content-card">
+        <div class="content-card-header">
+          <h3 class="content-card-title">Recent Registrations</h3>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search players..."
+              [value]="searchQuery()"
+              (input)="searchQuery.set($any($event.target).value)" />
+          </div>
+        </div>
+
+        @if (participants().length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">👤</span>
+            <p class="empty-title">No participants yet</p>
+            <p class="empty-subtitle">Participants will appear here once they register for the tournament.</p>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-num">Seed</th>
+                  <th>Player</th>
+                  <th>Current Rank</th>
+                  <th>Status</th>
+                  <th class="col-actions-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (participant of recentParticipants(); track participant.id; let i = $index) {
+                  <tr data-cy="participant-row">
+                    <td class="col-num"><span class="seed-num">#{{ (participant.seed ?? i + 1) }}</span></td>
+                    <td>
+                      <div class="player-cell">
+                        <div class="player-avatar">{{ (participant.player_username || 'U')[0].toUpperCase() }}</div>
+                        <p class="player-name" data-cy="participant-name">{{ participant.player_username || 'Unknown' }}</p>
+                      </div>
+                    </td>
+                    <td>
+                      @if (participant.tournament_points && participant.tournament_points !== 0) {
+                        <span class="points-earned"
+                              [class.positive]="participant.tournament_points > 0"
+                              [class.negative]="participant.tournament_points < 0">
+                          {{ participant.tournament_points > 0 ? '+' : '' }}{{ participant.tournament_points }} pts
+                        </span>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td>
+                      <span class="participant-status participant-status--{{ participant.status | lowercase }}">
+                        {{ participant.status }}
+                      </span>
+                    </td>
+                    <td class="col-actions-right">
+                      <button
+                        class="remove-link"
+                        data-cy="remove-participant-btn"
+                        (click)="openRemoveModal(participant)"
+                        [disabled]="actionLoading() === 'remove-' + participant.id || tournament()!.status === 'IN_PROGRESS' || tournament()!.status === 'COMPLETED'">
+                        @if (actionLoading() === 'remove-' + participant.id) {
+                          <span class="spinner-tiny"></span>
+                        } @else {
+                          Remove
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (participants().length > 5) {
+            <div class="view-all-row">
+              <button class="btn-view-all" (click)="setTab('participants')">
+                View All {{ participants().length }} Participants
+              </button>
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- ===== PARTICIPANTS TAB ===== -->
+    @if (activeTab() === 'participants') {
+      <div class="content-card">
+        <div class="content-card-header">
+          <h3 class="content-card-title">
+            All Participants
+            <span class="count-badge">{{ participants().length }}</span>
+          </h3>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search participants..."
+              [value]="searchQuery()"
+              (input)="searchQuery.set($any($event.target).value)" />
+          </div>
+        </div>
+
+        @if (filteredParticipants().length === 0) {
+          <div class="empty-state" data-cy="participants-empty-state">
+            <span class="empty-icon">👤</span>
+            <p class="empty-title">{{ searchQuery() ? 'No results found' : 'No participants yet' }}</p>
+            <p class="empty-subtitle">{{ searchQuery() ? 'Try a different search term.' : 'Participants will appear here once they register.' }}</p>
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="col-num">Seed</th>
+                  <th>Player</th>
+                  <th>Join Date</th>
+                  <th>Current Rank</th>
+                  <th>Status</th>
+                  <th class="col-actions-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (participant of filteredParticipants(); track participant.id; let i = $index) {
+                  <tr>
+                    <td class="col-num"><span class="seed-num">#{{ (participant.seed ?? i + 1) }}</span></td>
+                    <td>
+                      <div class="player-cell">
+                        <div class="player-avatar">{{ (participant.player_username || 'U')[0].toUpperCase() }}</div>
+                        <p class="player-name">{{ participant.player_username || 'Unknown' }}</p>
+                      </div>
+                    </td>
+                    <td>{{ participant.registered_at ? formatDate(participant.registered_at) : '—' }}</td>
+                    <td>
+                      @if (participant.tournament_points && participant.tournament_points !== 0) {
+                        <span class="points-earned"
+                              [class.positive]="participant.tournament_points > 0"
+                              [class.negative]="participant.tournament_points < 0">
+                          {{ participant.tournament_points > 0 ? '+' : '' }}{{ participant.tournament_points }} pts
+                        </span>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+                    <td>
+                      <span class="participant-status participant-status--{{ participant.status | lowercase }}">
+                        {{ participant.status }}
+                      </span>
+                    </td>
+                    <td class="col-actions-right">
+                      <button
+                        class="remove-link"
+                        (click)="openRemoveModal(participant)"
+                        [disabled]="actionLoading() === 'remove-' + participant.id || tournament()!.status === 'IN_PROGRESS' || tournament()!.status === 'COMPLETED'">
+                        @if (actionLoading() === 'remove-' + participant.id) {
+                          <span class="spinner-tiny"></span>
+                        } @else {
+                          Remove
+                        }
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ===== BRACKETS TAB ===== -->
+    @if (activeTab() === 'brackets') {
+      <div class="content-card">
+        <div class="content-card-header">
+          <h3 class="content-card-title">
+            Matches
+            @if (matches().length > 0) {
+              <span class="count-badge">{{ matches().length }}</span>
+            }
+          </h3>
+        </div>
+
+        @if (matchesLoading()) {
+          <div class="loading-container loading-container--sm">
+            <div class="spinner spinner--sm"></div>
+            <p class="loading-text">Loading matches…</p>
+          </div>
+        } @else if (matches().length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">🏓</span>
+            <p class="empty-title">No match records yet</p>
+            <p class="empty-subtitle">Matches will appear once the tournament bracket is generated.</p>
+          </div>
+        } @else {
+          <app-tournament-bracket
+            [bracketMatches]="matches()"
+            [format]="tournament()?.tournament_format || ''"
+            [tournamentIdInput]="tournamentId() || 0"
+            (adminScoreMatch)="openScoreModal($event)"
+            (adminStartMatch)="startAndScore($event)"
+            (adminCorrectMatch)="openCorrectModal($event)">
+          </app-tournament-bracket>
+        }
+      </div>
+    }
+
+    <!-- ===== SETTINGS TAB ===== -->
+    @if (activeTab() === 'settings') {
+      <div class="content-card">
+        <div class="content-card-header">
+          <h3 class="content-card-title">Match Format Per Round</h3>
+        </div>
+
+        @if (roundFormatsLoading()) {
+          <div class="settings-loading">Loading round formats…</div>
+        } @else if (roundFormats().length === 0) {
+          <div class="settings-empty">
+            <p>No round format configuration found.</p>
+            <p class="settings-empty-hint">Round formats are set when the tournament is created. Start the tournament to generate brackets.</p>
+          </div>
+        } @else {
+          <div class="round-formats-list">
+            @for (rf of roundFormats(); track rf.round_number) {
+              <div class="round-format-row">
+                <div class="rf-round-info">
+                  <span class="rf-round-num">Round {{ rf.round_number }}</span>
+                  <span class="rf-round-name">{{ rf.round_name }}</span>
+                </div>
+                <select
+                  class="rf-dropdown"
+                  [value]="rf.match_format"
+                  (change)="updateRoundFormatLocal(rf.round_number, $any($event.target).value)">
+                  @for (opt of FORMAT_OPTIONS; track opt.value) {
+                    <option [value]="opt.value" [selected]="opt.value === rf.match_format">{{ opt.label }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+          <div class="round-formats-footer">
+            @if (roundFormatsSaved()) {
+              <span class="rf-saved-msg">✓ Saved</span>
+            }
+            <button class="btn-save-formats" (click)="saveRoundFormats()" [disabled]="roundFormatsSaving()">
+              @if (roundFormatsSaving()) { Saving… } @else { Save Round Formats }
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ===== AWARDS TAB ===== -->
+    @if (activeTab() === 'awards') {
+      <div class="awards-tab-content">
+
+        <!-- Top grid: blue banner + 3 mini stat cards -->
+        <div class="awards-top-grid">
+          <div class="awards-banner">
+            <div class="awards-banner-text">
+              <h3 class="awards-banner-title">Point Distribution System</h3>
+              <p class="awards-banner-subtitle">Automated tier calculations based on tournament rating and participant count.</p>
+            </div>
+            <span class="awards-banner-deco" aria-hidden="true">✦</span>
+          </div>
+          <div class="awards-mini-stat">
+            <span class="awards-mini-icon">✓</span>
+            <p class="awards-mini-label">SYSTEM STATE</p>
+            <p class="awards-mini-value">ACTIVE</p>
+          </div>
+          <div class="awards-mini-stat">
+            <span class="awards-mini-icon">★</span>
+            <p class="awards-mini-label">TOP POINTS</p>
+            <p class="awards-mini-value">{{ getTopPoints() }} PTS</p>
+          </div>
+          <div class="awards-mini-stat">
+            <span class="awards-mini-icon">✓</span>
+            <p class="awards-mini-label">COMPLIANCE</p>
+            <p class="awards-mini-value awards-mini-verified">VERIFIED</p>
+          </div>
+        </div>
+
+        <!-- Add Tier Form (shown when toggled) -->
+        @if (showAddTierPanel()) {
+          <div class="add-tier-form" [formGroup]="newTierForm">
+            <h4 class="add-tier-heading">New Award Tier</h4>
+            <div class="add-tier-fields">
+              <div class="form-field">
+                <label class="form-field-label">Tier Type</label>
+                <select class="select-inline" formControlName="tierType">
+                  <option value="POSITION">Position</option>
+                  <option value="ALL_PARTICIPANTS">All Participants</option>
+                  <option value="SPECIFIC_USER">Specific User</option>
+                </select>
+              </div>
+              @if (nt['tierType'].value === 'POSITION') {
+                <div class="form-field">
+                  <label class="form-field-label">Position Rank</label>
+                  <input type="number" class="input-inline" formControlName="position" placeholder="e.g. 1" min="1" (input)="onNewTierPositionInput($event)">
+                  @if (nt['position'].hasError('required') && nt['position'].touched) {
+                    <span class="field-error">Position is required.</span>
+                  }
+                  @if (tierPositionError()) {
+                    <span class="field-error">{{ tierPositionError() }}</span>
+                  }
+                </div>
+              }
+              <div class="form-field">
+                <label class="form-field-label">Points</label>
+                <div class="points-edit-field">
+                  <input type="number" class="input-inline input-points" formControlName="points" min="1">
+                  <span class="pts-suffix">Pts</span>
+                </div>
+                @if (nt['points'].hasError('notInteger') && nt['points'].touched) {
+                  <span class="field-error">Points must be a whole number (no decimals).</span>
+                }
+                @if (nt['points'].hasError('min') && nt['points'].touched) {
+                  <span class="field-error">Points must be a positive number (minimum 1).</span>
+                }
+                @if (nt['points'].hasError('required') && nt['points'].touched) {
+                  <span class="field-error">Points is required.</span>
+                }
+                @if (tierPointsError()) {
+                  <span class="field-error">{{ tierPointsError() }}</span>
+                }
+              </div>
+              <div class="form-field">
+                <label class="form-field-label">Label (optional)</label>
+                <input type="text" class="input-inline" formControlName="label" placeholder="e.g. Champion" (input)="onNewTierLabelInput($event)">
+                @if (tierLabelError()) {
+                  <span class="field-error">{{ tierLabelError() }}</span>
+                }
+              </div>
+            </div>
+            <div class="add-tier-actions">
+              <button type="button" class="btn-tier-cancel" (click)="cancelAddTier()">Cancel</button>
+              <button type="button" class="btn-tier-save" [disabled]="tierSaving() || !!tierPositionError() || !!tierLabelError()" (click)="saveNewTier()">
+                @if (tierSaving()) { Saving... } @else { Save Tier }
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Tier Configuration Card -->
+        <div class="tier-config-card">
+          <div class="tier-config-card-header">
+            <h4 class="tier-config-title">Tier Configuration</h4>
+            <button type="button" class="btn-manage-rules">Manage Rules</button>
+          </div>
+
+          <table class="tier-config-table">
+            <thead>
+              <tr>
+                <th class="tier-th">Tier Name</th>
+                <th class="tier-th">Points Distribution</th>
+                <th class="tier-th">Position Rank</th>
+                <th class="tier-th tier-th-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (awardTiers().length === 0) {
+                <tr>
+                  <td colspan="4" class="tiers-empty">
+                    No award tiers yet. Click "+ Add New Tier" to create one.
+                  </td>
+                </tr>
+              }
+              @for (tier of awardTiers(); track tier.id) {
+                @if (editingTierId() === tier.id) {
+                  <!-- Inline edit row -->
+                  <tr class="tier-row tier-edit-row">
+                    <td class="tier-td">
+                      <input type="text" class="input-inline"
+                             [value]="editFormLabel()"
+                             (input)="setEditLabel($event)"
+                             placeholder="Tier name">
+                      @if (editLabelError()) {
+                        <span class="field-error">{{ editLabelError() }}</span>
+                      }
+                    </td>
+                    <td class="tier-td">
+                      <div class="points-edit-field">
+                        <input type="number" class="input-inline input-points"
+                               [value]="editFormPoints()"
+                               (input)="setEditPoints($event)">
+                        <span class="pts-suffix">Pts</span>
+                      </div>
+                    </td>
+                    <td class="tier-td">
+                      @if (editFormTierType() === 'POSITION') {
+                        <select class="select-inline"
+                                [value]="editFormPosition()"
+                                (change)="setEditPosition($event)">
+                          <option value="1">1st Place</option>
+                          <option value="2">2nd Place</option>
+                          <option value="3">3rd Place</option>
+                          <option value="4">4th Place</option>
+                        </select>
+                        @if (editPositionError()) {
+                          <span class="field-error">{{ editPositionError() }}</span>
+                        }
+                      } @else {
+                        <span class="tier-rank-text">{{ editFormTierType() === 'ALL_PARTICIPANTS' ? 'All Participants' : 'Specific Player' }}</span>
+                      }
+                    </td>
+                    <td class="tier-td tier-td-right">
+                      <div class="tier-action-btns">
+                        <button class="btn-tier-save" type="button" [disabled]="!!editPositionError() || !!editLabelError()" (click)="saveInlineEdit(editingTierId()!)">Save</button>
+                        <button class="btn-tier-cancel" type="button" (click)="cancelInlineEdit()">Cancel</button>
+                      </div>
+                    </td>
+                  </tr>
+                } @else {
+                  <!-- View row -->
+                  <tr class="tier-row" data-cy="tier-row">
+                    <td class="tier-td">
+                      <div class="tier-name-cell">
+                        <div class="tier-icon-box" [class]="getTierIconBoxClass(tier)">
+                          <span>{{ getTierIcon(tier) }}</span>
+                        </div>
+                        <span class="tier-name-label">{{ tier.label || getTierDisplayName(tier) }}</span>
+                      </div>
+                    </td>
+                    <td class="tier-td">
+                      <span class="points-badge-pill">{{ tier.points }} Pts</span>
+                    </td>
+                    <td class="tier-td tier-rank-cell">
+                      {{ getTierPositionLabel(tier) }}
+                    </td>
+                    <td class="tier-td tier-td-right">
+                      <div class="tier-action-btns">
+                        <button class="btn-icon-action" type="button" title="Edit" (click)="startInlineEdit(tier)">
+                          <span class="btn-icon-action-edit-icon">✏</span>
+                        </button>
+                        <button class="tier-action-delete btn-icon-action btn-icon-action-delete" type="button" title="Delete" (click)="openDeleteTierModal(tier)">
+                          <span>🗑</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="tier-tfoot-td">
+                  <div class="tier-tfoot-row">
+                    <div class="tier-tfoot-links">
+                      <span class="tier-tfoot-link">📋 Audit Logs</span>
+                    </div>
+                    <div class="tier-tfoot-total">
+                      <span class="tier-tfoot-total-label">Total points allocated</span>
+                      <span class="tier-tfoot-total-value">{{ getTotalPoints() | number }} Pts</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Action bar: Reset left | Add New Tier + Distribute right -->
+        <div class="awards-action-bar">
+          <div>
+            <button class="btn-reset-awards"
+                    type="button"
+                    (click)="resetAwards()"
+                    [disabled]="resetting()">
+              {{ resetting() ? 'Resetting...' : '↺ Reset Awards' }}
+            </button>
+          </div>
+          <div class="awards-action-bar-right">
+            <button class="btn-add-tier-footer"
+                    type="button"
+                    data-cy="add-tier-btn"
+                    (click)="toggleAddTierForm()">
+              + Add New Tier
+            </button>
+            <button class="btn-distribute"
+                    type="button"
+                    (click)="distributeAwards()"
+                    [disabled]="distributing()">
+              {{ distributing() ? 'Distributing...' : '🏆 Distribute Awards' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    }
+
+  </div>
+}
+
+<!-- Match Scoring / Correction Modal — replaced by /admin/matches/:id/score full-page component -->
+<!-- @if (showCorrectionModal() && selectedMatch()) {
+  <app-match-correction-modal
+    [match]="selectedMatch()"
+    [mode]="modalMode()"
+    [matchFormat]="tournament()?.match_format ?? 'BEST_OF_3'"
+    (scoreSaved)="onScoreSaved($event)"
+    (cancelled)="closeCorrectionModal()">
+  </app-match-correction-modal>
+} -->
+
+<!-- Delete Confirmation Modal — Pixel-Perfect (s4-f0cb4b24) -->
+@if (showDeleteModal()) {
+  <div class="modal-overlay" data-cy="delete-tournament-modal" (click)="closeDeleteModal()">
+    <div class="modal-box modal-sm modal-box--delete" (click)="$event.stopPropagation()">
+
+      <!-- Icon circle at top center -->
+      <div class="delete-icon-circle">
+        <span class="delete-icon">🗑</span>
+      </div>
+
+      <!-- Title -->
+      <h3 class="delete-modal-title">Delete Tournament?</h3>
+
+      <!-- Body text -->
+      <p class="delete-modal-body">
+        Are you sure you want to delete the tournament
+        <strong>"{{ tournament()!.name }}"</strong>?
+        All associated data, player registrations, and schedules will be permanently removed.
+        This action cannot be undone.
+      </p>
+
+      <!-- Actions: Cancel (left) + Delete (right) -->
+      <div class="delete-modal-actions">
+        <button class="btn-delete-cancel" (click)="closeDeleteModal()">Cancel</button>
+        <button
+          class="btn-delete-confirm"
+          data-cy="delete-tournament-confirm-btn"
+          (click)="deleteTournament()"
+          [disabled]="actionLoading() === 'delete'">
+          @if (actionLoading() === 'delete') {
+            <span class="spinner-small spinner-small--light"></span> Deleting...
+          } @else {
+            Delete Tournament
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- Remove Participant Confirmation Modal -->
+@if (showRemoveModal() && participantToRemove()) {
+  <div class="modal-overlay" (click)="closeRemoveModal()">
+    <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-danger-icon">👤</div>
+        <h3 class="modal-title">Remove Participant?</h3>
+        <button class="btn-modal-close" (click)="closeRemoveModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-body-text">
+          Are you sure you want to remove <strong>{{ participantToRemove()!.name }}</strong> from this tournament?
+        </p>
+        <p class="modal-warning-text">The player will lose their registration spot. This cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeRemoveModal()">Cancel</button>
+        <button class="btn-danger" (click)="confirmRemoveParticipant()">Remove Participant</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Start Tournament Modal -->
+@if (showStartModal()) {
+  <div class="modal-overlay" data-cy="start-tournament-modal" (click)="closeStartModal()">
+    <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Start Tournament</h3>
+        <button class="btn-modal-close" (click)="closeStartModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-body-text">
+          Are you sure you want to start <strong>"{{ tournament()!.name }}"</strong>?
+        </p>
+        <p class="modal-info-text">
+          Current participants: <strong>{{ participants().length }} / {{ tournament()!.max_participants }}</strong>
+        </p>
+        @if ((tournament()!.format || tournament()!.tournament_format) === 'SINGLE_ELIMINATION' || (tournament()!.format || tournament()!.tournament_format) === 'DOUBLE_ELIMINATION') {
+          @if (!isPowerOfTwo(participants().length)) {
+            <div class="modal-warning-banner">
+              ⚠ Power-of-2 count recommended (4, 8, 16, 32…). Current: {{ participants().length }}
+            </div>
+          }
+        }
+        <p class="modal-info-text">Starting will generate the bracket and close new registrations.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeStartModal()">Cancel</button>
+        <button class="btn-primary" data-cy="start-tournament-confirm-btn" (click)="startTournament()" [disabled]="actionLoading() === 'start'">
+          @if (actionLoading() === 'start') {
+            <span class="spinner-small"></span> Starting...
+          } @else {
+            Start Tournament
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Complete Tournament Modal -->
+@if (showCompleteModal()) {
+  <div class="modal-overlay" data-cy="complete-tournament-modal" (click)="closeCompleteModal()">
+    <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Complete Tournament</h3>
+        <button class="btn-modal-close" (click)="closeCompleteModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-body-text">
+          Mark <strong>"{{ tournament()!.name }}"</strong> as completed?
+        </p>
+        <p class="modal-info-text">This will finalize results and update player ELO ratings.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeCompleteModal()">Cancel</button>
+        <button class="btn-primary" data-cy="complete-tournament-confirm-btn" (click)="completeTournament()" [disabled]="actionLoading() === 'complete'">
+          @if (actionLoading() === 'complete') {
+            <span class="spinner-small"></span> Completing...
+          } @else {
+            Complete Tournament
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Tier Confirmation Modal -->
+@if (showDeleteTierModal()) {
+  <div class="modal-overlay" (click)="cancelDeleteTier()">
+    <div class="modal-box modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Delete Award Tier</h3>
+        <button class="btn-modal-close" (click)="cancelDeleteTier()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-body-text">
+          Are you sure you want to delete the <strong>"{{ tierToDelete()?.label }}"</strong> award tier?
+        </p>
+        <p class="modal-info-text">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cancelDeleteTier()">Cancel</button>
+        <button class="btn-danger" data-cy="delete-tier-confirm-btn" (click)="confirmDeleteTier()">Delete Tier</button>
+      </div>
+    </div>
+  </div>
+}

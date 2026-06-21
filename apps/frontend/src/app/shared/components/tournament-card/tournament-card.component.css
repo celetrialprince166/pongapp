@@ -1,0 +1,231 @@
+/* Tournament Card Container */
+.tournament-card {
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  transition: box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tournament-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.tournament-card.card-closed {
+  opacity: 0.9;
+}
+
+/* Hero Section */
+.card-hero {
+  position: relative;
+  height: 176px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* heroColor set via [style.background-color] — always a clean #EEF2F7 */
+}
+
+/* Real image */
+.hero-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.18), transparent);
+}
+
+/* Branded placeholder — STEP 7 FIX */
+.hero-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-placeholder svg {
+  stroke: #CBD5E1;
+}
+
+/* Status Badge */
+.status-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  color: white;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+.status-badge.status-upcoming {
+  background-color: #3b82f6;
+}
+
+.status-badge.status-registration {
+  background-color: #f59e0b;
+  color: #0f1922;
+}
+
+.status-badge.status-in-progress {
+  background-color: #38e07b;
+  color: #0f1922;
+}
+
+.status-badge.status-completed {
+  background-color: #94a3b8;
+}
+
+.status-badge.status-cancelled {
+  background-color: #ef4444;
+}
+
+/* Legacy fallbacks */
+.status-badge.status-open     { background-color: #38e07b; color: #0f1922; }
+.status-badge.status-closing  { background-color: #f59e0b; color: #0f1922; }
+.status-badge.status-closed   { background-color: #94a3b8; }
+
+/* Card Body */
+.card-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #0F172A;
+  line-height: 1.3;
+}
+
+.card-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748B;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.location-icon {
+  stroke: #94A3B8;
+  flex-shrink: 0;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  background: #F8FAFC;
+  padding: 8px 6px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #94A3B8;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 3px;
+}
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  gap: 0.5rem;
+}
+
+.card-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #94A3B8;
+  font-size: 12px;
+}
+
+.date-icon {
+  stroke: #CBD5E1;
+  flex-shrink: 0;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--color-accent, #38e07b);
+  color: #0f1922;
+  padding: 9px 18px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover, #2bc66a);
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.badge-capacity-full {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #dc2626;
+  white-space: nowrap;
+}
+
+.badge-registered {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #16a34a;
+  background: rgba(56, 224, 123, 0.12);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}

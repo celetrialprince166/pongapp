@@ -1,0 +1,98 @@
+<div class="tournaments-tab">
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading tournaments...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!isLoading() && error()) {
+    <div class="error-state">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!isLoading() && !error()) {
+
+    <!-- Summary strip -->
+    @if (tournaments().length > 0) {
+      <div class="summary-strip">
+        <div class="summary-item">
+          <span class="summary-value">{{ tournaments().length }}</span>
+          <span class="summary-label">Tournaments</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+          <span class="summary-value">{{ inProgressCount() }}</span>
+          <span class="summary-label">In Progress</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+          <span class="summary-value">{{ totalParticipants() }}</span>
+          <span class="summary-label">Total Players</span>
+        </div>
+      </div>
+    }
+
+    <!-- Table -->
+    @if (tournaments().length > 0) {
+      <div class="table-card">
+        <table class="tournaments-table">
+          <thead>
+            <tr>
+              <th>Tournament</th>
+              <th>Format</th>
+              <th>Status</th>
+              <th>Players</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of tournaments(); track t.id) {
+              <tr class="table-row">
+                <td class="col-name">
+                  <span class="tournament-name">{{ t.name }}</span>
+                </td>
+                <td class="col-format">
+                  <span class="format-label">{{ formatLabel(t.tournament_format) }}</span>
+                </td>
+                <td class="col-status">
+                  <span [class]="'status-badge ' + getStatusInfo(t.status).cls">
+                    {{ getStatusInfo(t.status).label }}
+                  </span>
+                </td>
+                <td class="col-players">
+                  {{ t.participant_count }} / {{ t.max_participants }}
+                </td>
+                <td class="col-date">{{ formatDate(t.start_date) }}</td>
+                <td class="col-date">{{ t.end_date ? formatDate(t.end_date) : '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (tournaments().length === 0) {
+      <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 21h8M12 21v-4M6 3H4a2 2 0 0 0-2 2v2c0 3.31 2.69 6 6 6h8c3.31 0 6-2.69 6-6V5a2 2 0 0 0-2-2h-2"/>
+          <rect x="6" y="3" width="12" height="8" rx="1"/>
+        </svg>
+        <h3 class="empty-title">No Tournaments</h3>
+        <p class="empty-body">No tournaments have been linked to this season yet.</p>
+      </div>
+    }
+
+  }
+
+</div>

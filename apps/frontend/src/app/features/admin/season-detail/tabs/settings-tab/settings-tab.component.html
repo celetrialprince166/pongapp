@@ -1,0 +1,79 @@
+<div class="settings-tab">
+
+  <!-- ── Rating System Info ────────────────────── -->
+  <section class="settings-section">
+    <div class="section-header">
+      <div class="section-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="section-title">ELO Rating System</h3>
+        <p class="section-desc">
+          Player rankings are determined by ELO rating — a skill-based system
+          where rating changes depend on the relative strength of opponents.
+        </p>
+      </div>
+    </div>
+
+    <div class="elo-info-grid">
+      <div class="elo-info-item">
+        <span class="elo-label">Starting Rating</span>
+        <span class="elo-value">1000</span>
+      </div>
+      <div class="elo-info-item">
+        <span class="elo-label">K-Factor — Amateur</span>
+        <span class="elo-value">32 <span class="elo-note">(&lt; 1500)</span></span>
+      </div>
+      <div class="elo-info-item">
+        <span class="elo-label">K-Factor — Pro</span>
+        <span class="elo-value">16 <span class="elo-note">(≥ 1500)</span></span>
+      </div>
+      <div class="elo-info-item">
+        <span class="elo-label">Pro Threshold</span>
+        <span class="elo-value">1500</span>
+      </div>
+    </div>
+
+    <div class="elo-formula">
+      <span class="formula-label">Formula</span>
+      <code class="formula-text">R_new = R_old + K × (S − E)</code>
+      <span class="formula-hint">where S = actual score (1 win / 0 loss), E = expected score</span>
+    </div>
+  </section>
+
+  <!-- ── Recalculate ELO ───────────────────────── -->
+  <section class="settings-section settings-section-danger">
+    <div class="section-header">
+      <div class="section-icon-wrap section-icon-warn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M8 16H3v5"/>
+        </svg>
+      </div>
+      <div>
+        <h3 class="section-title">Recalculate ELO Ratings</h3>
+        <p class="section-desc">
+          Rebuild all standings by replaying every completed match in this season
+          in chronological order. All current ratings and rank history will be
+          reset and recomputed from scratch.
+        </p>
+      </div>
+    </div>
+
+    <div class="section-actions">
+      <button class="btn btn-outlined-danger" (click)="recalculate()" [disabled]="isRecalculating()">
+        @if (isRecalculating()) {
+          <div class="btn-spinner btn-spinner-danger"></div>
+          Recalculating…
+        } @else {
+          Recalculate ELO Ratings
+        }
+      </button>
+    </div>
+  </section>
+
+</div>

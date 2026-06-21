@@ -1,0 +1,255 @@
+<div class="scoring-page">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a class="breadcrumb-link" (click)="cancel()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      Back to Tournament
+    </a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current">Match Scoring</span>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>Loading match data…</span>
+    </div>
+  } @else if (error() && !match()) {
+    <div class="error-banner">{{ error() }}</div>
+  } @else if (match()) {
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-left">
+        <h1 class="page-title">Match Scoring</h1>
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          Live Broadcast
+        </div>
+      </div>
+      <div class="header-right">
+        @if (saving()) {
+          <span class="saving-indicator">Saving…</span>
+        }
+      </div>
+    </div>
+
+    @if (error()) {
+      <div class="error-banner">{{ error() }}</div>
+    }
+
+    <!-- Main Score Card -->
+    <div class="score-card">
+      <div class="players-row">
+
+        <!-- Player 1 -->
+        <div class="player-side player-side-left">
+          <div class="player-name">{{ player1Name() }}</div>
+          <div class="score-display">{{ player1GamesWon() }}</div>
+          <div class="current-game-score">
+            @if (currentGameRow()) {
+              <span class="game-pts">{{ currentGameRow()!.player1_score }} pts</span>
+            }
+          </div>
+          @if (servePlayer() === 1) {
+            <div class="serve-badge">SERVE</div>
+          }
+        </div>
+
+        <!-- VS divider -->
+        <div class="vs-divider">
+          <span class="vs-text">VS</span>
+          <div class="game-counter">Game {{ currentGame() }}</div>
+        </div>
+
+        <!-- Player 2 -->
+        <div class="player-side player-side-right">
+          <div class="player-name">{{ player2Name() }}</div>
+          <div class="score-display">{{ player2GamesWon() }}</div>
+          <div class="current-game-score">
+            @if (currentGameRow()) {
+              <span class="game-pts">{{ currentGameRow()!.player2_score }} pts</span>
+            }
+          </div>
+          @if (servePlayer() === 2) {
+            <div class="serve-badge">SERVE</div>
+          }
+        </div>
+
+      </div>
+
+      <!-- Scoring Buttons -->
+      @if (!isMatchComplete()) {
+        <div class="scoring-controls">
+
+          <!-- Player 1 controls -->
+          <div class="player-controls">
+            <button class="btn-minus" (click)="removePointP1()" [disabled]="saving()" title="Remove point">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <button class="btn-plus" (click)="addPointP1()" [disabled]="saving()">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Undo -->
+          <div class="undo-area">
+            <button class="btn-undo" (click)="undoLastAction()" [disabled]="!hasUndo() || saving()" title="Undo last point">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 7v6h6"/>
+                <path d="M3 13C5.5 8 10.5 5 16 5c4.5 0 8 2.5 9 7"/>
+              </svg>
+              Undo
+            </button>
+          </div>
+
+          <!-- Player 2 controls -->
+          <div class="player-controls player-controls-right">
+            <button class="btn-plus" (click)="addPointP2()" [disabled]="saving()">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <button class="btn-minus" (click)="removePointP2()" [disabled]="saving()" title="Remove point">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      }
+
+      @if (isMatchComplete()) {
+        <div class="match-complete-banner">
+          Match Complete
+        </div>
+      }
+    </div>
+
+    <!-- Game History -->
+    <div class="game-history-card">
+      <h2 class="section-title">Game History</h2>
+
+      <table class="game-table">
+        <thead>
+          <tr>
+            <th>Game</th>
+            <th>{{ player1Name() }}</th>
+            <th>{{ player2Name() }}</th>
+            <th>Winner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Completed games -->
+          @for (game of completedGames(); track game.game_number) {
+            <tr class="game-row game-row-completed">
+              <td class="game-num">{{ game.game_number }}</td>
+              <td class="game-score" [class.score-winner]="game.winner === player1Id()">
+                {{ game.player1_score }}
+              </td>
+              <td class="game-score" [class.score-winner]="game.winner === player2Id()">
+                {{ game.player2_score }}
+              </td>
+              <td class="game-winner-name">{{ getGameWinnerLabel(game) }}</td>
+            </tr>
+          }
+
+          <!-- Current in-progress game (inline editable) -->
+          @if (currentGameRow()) {
+            <tr class="game-row game-row-active">
+              <td class="game-num">{{ currentGameRow()!.game_number }}</td>
+              <td class="game-score-edit">
+                <input
+                  type="number"
+                  class="score-input"
+                  min="0"
+                  [ngModel]="inProgressP1Score()"
+                  (ngModelChange)="inProgressP1Score.set($event)"
+                />
+              </td>
+              <td class="game-score-edit">
+                <input
+                  type="number"
+                  class="score-input"
+                  min="0"
+                  [ngModel]="inProgressP2Score()"
+                  (ngModelChange)="inProgressP2Score.set($event)"
+                />
+              </td>
+              <td class="game-in-progress">
+                <button class="btn-save-game" (click)="saveInProgressGame()" [disabled]="saving()">
+                  Save
+                </button>
+              </td>
+            </tr>
+          }
+
+          <!-- Pending games -->
+          @for (game of pendingGameRows(); track game.game_number) {
+            <tr class="game-row game-row-pending">
+              <td class="game-num">{{ game.game_number }}</td>
+              <td class="game-score">—</td>
+              <td class="game-score">—</td>
+              <td>—</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="footer-actions">
+      <button class="btn-cancel" (click)="cancel()" [disabled]="completing()">
+        Cancel
+      </button>
+      <button
+        class="btn-save-bracket"
+        (click)="openCompleteModal()"
+        [disabled]="completing() || saving() || !canCompleteMatch()"
+      >
+        @if (completing()) {
+          Completing…
+        } @else {
+          Save &amp; Update Bracket
+        }
+      </button>
+    </div>
+
+  }
+
+  <!-- Complete Match Confirmation Modal -->
+  @if (showCompleteModal()) {
+    <div class="modal-overlay" (click)="cancelCompleteModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Complete Match?</h3>
+          <button class="btn-modal-close" (click)="cancelCompleteModal()" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-score-summary">
+            <span class="modal-player">{{ player1Name() }}</span>
+            <span class="modal-score-vs">{{ player1GamesWon() }} – {{ player2GamesWon() }}</span>
+            <span class="modal-player">{{ player2Name() }}</span>
+          </div>
+          <p class="modal-warning">This will finalise the match and update the bracket. This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="cancelCompleteModal()">Cancel</button>
+          <button class="btn-confirm-complete" data-cy="confirm-complete-btn" (click)="saveAndUpdateBracket()">
+            @if (completing()) { Completing… } @else { Confirm &amp; Complete }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

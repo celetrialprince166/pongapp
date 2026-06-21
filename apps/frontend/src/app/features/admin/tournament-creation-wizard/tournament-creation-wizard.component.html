@@ -1,0 +1,628 @@
+<div class="creation-page" data-cy="wizard-page">
+
+  <!-- ══ STEP INDICATOR — top of content area ══════════════════ -->
+  <div class="stepper-row">
+    <div class="stepper">
+      @for (step of steps; track step.number; let last = $last) {
+        <div class="step-item">
+          <div class="step-circle"
+               [class.step-active]="currentStep() === step.number"
+               [class.step-done]="currentStep() > step.number">
+            @if (currentStep() > step.number) {
+              <span class="material-symbols-outlined step-check">check</span>
+            } @else {
+              {{ step.number }}
+            }
+          </div>
+          <span class="step-label"
+                [class.step-label-active]="currentStep() === step.number"
+                [class.step-label-done]="currentStep() > step.number">
+            {{ step.label }}
+          </span>
+        </div>
+        @if (!last) {
+          <div class="step-connector"
+               [class.step-connector-done]="currentStep() > step.number"></div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- ══ FORM CARD ═════════════════════════════════════════════ -->
+  <div class="form-wrapper">
+
+    <!-- ── STEP 1: Basic Info ────────────────────────────────── -->
+    @if (currentStep() === 1) {
+    <div class="form-card" [formGroup]="basicInfoForm">
+
+        <!-- Section: General Details -->
+        <div class="card-section">
+          <div class="section-header">
+            <span class="material-symbols-outlined section-icon">info</span>
+            <h2 class="section-title">General Details</h2>
+          </div>
+
+          <!-- Row 1: Tournament Name + Start Date -->
+          <div class="field-row two-col">
+            <div class="field-group">
+              <label class="field-label">Tournament Name</label>
+              <input
+                type="text"
+                class="field-input"
+                data-cy="wizard-name-input"
+                [class.input-error]="f['tournamentName'].invalid && f['tournamentName'].touched"
+                formControlName="tournamentName"
+                placeholder="e.g. Autumn Masters Invitational 2024">
+              @if (f['tournamentName'].invalid && f['tournamentName'].touched) {
+                <span class="field-error">Tournament name is required.</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Start Date</label>
+              <input
+                type="date"
+                class="field-input"
+                [class.input-error]="f['startDate'].invalid && f['startDate'].touched"
+                formControlName="startDate"
+                style="color-scheme: light;">
+              @if (f['startDate'].invalid && f['startDate'].touched) {
+                <span class="field-error">Start date is required.</span>
+              }
+            </div>
+          </div>
+
+          <!-- Row 2: Location with pin icon -->
+          <div class="field-group">
+            <label class="field-label">Location</label>
+            <div class="icon-input-wrapper">
+              <span class="input-prefix-icon material-symbols-outlined">location_on</span>
+              <input
+                type="text"
+                class="field-input icon-input"
+                formControlName="location"
+                placeholder="Enter venue name or address">
+            </div>
+          </div>
+
+          <!-- Venue Verification Box — Stitch spec: verified_user icon, #eff6ff bg -->
+          <div class="venue-box">
+            <span class="venue-icon material-symbols-outlined">verified_user</span>
+            <div class="venue-content">
+              <p class="venue-title">Venue Verification</p>
+              <p class="venue-text">The location selected will be verified against our master database to ensure compatibility with tournament requirements.</p>
+            </div>
+          </div>
+
+          <!-- Row 3: Season (Optional) + Prize Label (Cosmetic) -->
+          <div class="field-row two-col">
+            <div class="field-group">
+              <label class="field-label">
+                Season
+                <span class="field-optional">Optional</span>
+              </label>
+              @if (seasonLoading()) {
+                <select class="field-select" disabled>
+                  <option>Loading...</option>
+                </select>
+              } @else if (hasActiveSeason()) {
+                <select class="field-select" formControlName="season">
+                  <option value="">Select Season...</option>
+                  <option [value]="activeSeasonId()">{{ activeSeasonLabel() }}</option>
+                </select>
+              } @else {
+                <div class="no-season-notice">
+                  <span class="material-symbols-outlined">info</span>
+                  <p>No active season available. Create an active season in Season Management to link this tournament.</p>
+                </div>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">
+                Prize Label
+                <span class="field-tag-cosmetic">Cosmetic</span>
+              </label>
+              <div class="icon-input-wrapper">
+                <span class="input-prefix-icon material-symbols-outlined">emoji_events</span>
+                <input
+                  type="text"
+                  class="field-input icon-input"
+                  formControlName="prizeLabel"
+                  placeholder="e.g., 1,000 Pts Pool">
+              </div>
+              <p class="field-footnote">This label will be displayed on the tournament card.</p>
+            </div>
+          </div>
+        </div><!-- /General Details -->
+
+        <!-- Section: Tournament Format -->
+        <div class="card-section">
+          <p class="format-section-label">Tournament Format</p>
+          <div class="format-cards">
+            @for (fmt of formatOptions(); track fmt.id) {
+              <button
+                type="button"
+                class="format-card"
+                [class.format-card-selected]="f['tournamentFormat'].value === fmt.id"
+                (click)="selectFormat(fmt.id)">
+                <span class="format-card-icon material-symbols-outlined">{{ fmt.icon }}</span>
+                <span class="format-card-title">{{ fmt.label }}</span>
+                <span class="format-card-desc">{{ fmt.desc }}</span>
+              </button>
+            }
+          </div>
+        </div><!-- /Tournament Format -->
+
+        <!-- Section: Maximum Number of Players -->
+        <div class="card-section">
+          <div class="field-group half-width">
+            <label class="field-label">Maximum Number of Players</label>
+            <div class="icon-input-wrapper">
+              <span class="input-prefix-icon material-symbols-outlined">group</span>
+              <input
+                type="number"
+                class="field-input icon-input"
+                formControlName="maxPlayers"
+                placeholder="e.g. 32"
+                min="2"
+                max="256">
+            </div>
+          </div>
+        </div><!-- /Max Players -->
+
+    </div><!-- /form-card step 1 -->
+    }
+
+    <!-- ── STEP 2: Registration ───────────────────────────────── -->
+    @if (currentStep() === 2) {
+    <div class="form-card" [formGroup]="registrationForm">
+
+        <div class="card-section">
+          <div class="section-header">
+            <span class="material-symbols-outlined section-icon">how_to_reg</span>
+            <h2 class="section-title">Registration Setup</h2>
+          </div>
+          <p class="section-desc">Configure how the tournament starts.</p>
+
+          <!-- Registration Mode Cards -->
+          <div class="reg-mode-cards">
+
+            <!-- Automatic -->
+            <button type="button" class="reg-mode-card"
+                    [class.reg-mode-card-selected]="r['registrationMode'].value === 'automatic'"
+                    (click)="selectRegistrationMode('automatic')">
+              <div class="reg-card-indicator">
+                <div class="radio-circle" [class.radio-active]="r['registrationMode'].value === 'automatic'"></div>
+              </div>
+              <span class="material-symbols-outlined reg-card-icon">bolt</span>
+              <span class="reg-card-title">Automatic Start</span>
+              <span class="reg-card-desc">Match start automatically.</span>
+            </button>
+
+            <!-- Approval Required -->
+            <button type="button" class="reg-mode-card"
+                    [class.reg-mode-card-selected]="r['registrationMode'].value === 'manual'"
+                    (click)="selectRegistrationMode('manual')">
+              <div class="reg-card-indicator">
+                @if (r['registrationMode'].value === 'manual') {
+                  <div class="check-circle">
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                } @else {
+                  <div class="radio-circle"></div>
+                }
+              </div>
+              <span class="material-symbols-outlined reg-card-icon"
+                    [class.reg-card-icon-selected]="r['registrationMode'].value === 'manual'">verified_user</span>
+              <span class="reg-card-title"
+                    [class.reg-card-title-selected]="r['registrationMode'].value === 'manual'">Manual Start</span>
+              <span class="reg-card-desc">You must manually start each match.</span>
+            </button>
+
+          </div><!-- /reg-mode-cards -->
+
+          <!-- Registration Deadline -->
+          <div class="field-group reg-deadline-group">
+            <label class="field-label">
+              Registration Deadline
+              <span class="field-optional">Optional</span>
+              <span class="material-symbols-outlined field-info-icon">info</span>
+            </label>
+            <div class="icon-input-wrapper">
+              <span class="input-prefix-icon material-symbols-outlined">calendar_month</span>
+              <input
+                type="datetime-local"
+                class="field-input icon-input"
+                formControlName="registrationDeadline"
+                style="color-scheme: light;">
+            </div>
+            @if (r['registrationDeadline'].hasError('required')) {
+              <span class="field-error">Registration deadline is required for Automatic Start mode.</span>
+            }
+            <div class="info-box">
+              <span class="material-symbols-outlined info-box-icon">info</span>
+              <p class="info-box-text">Set when registration closes. If left empty, it remains open until the tournament bracket starts.</p>
+            </div>
+          </div>
+
+          <!-- Public Tournament Toggle -->
+          <div class="toggle-row">
+            <span class="material-symbols-outlined toggle-icon">public</span>
+            <div class="toggle-content">
+              <span class="toggle-label">Public Tournament</span>
+              <span class="toggle-desc">Listed on the community discovery page.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="isPublic">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+        </div><!-- /card-section -->
+
+    </div><!-- /form-card step 2 -->
+    }
+
+    <!-- ── STEP 3: Rules & Rewards ───────────────────────────── -->
+    @if (currentStep() === 3) {
+    <div class="form-card">
+
+        <!-- Section: Tournament Rules -->
+        <div class="card-section" [formGroup]="rulesForm">
+          <div class="section-header">
+            <span class="material-symbols-outlined section-icon">pan_tool_alt</span>
+            <h2 class="section-title">Tournament Rules</h2>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">General Rules &amp; Scoring Details</label>
+            <textarea
+              class="field-textarea"
+              formControlName="generalRules"
+              placeholder="Describe match scoring (e.g., Best of 5, 11-point games), equipment requirements, and code of conduct..."></textarea>
+          </div>
+
+          <!-- Rating Type toggle -->
+          <div class="toggle-row rules-rating-row">
+            <span class="material-symbols-outlined toggle-icon rating-icon">military_tech</span>
+            <div class="toggle-content">
+              <span class="toggle-label">Rating Type</span>
+              <span class="toggle-desc">Should this tournament affect official player rankings?</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="isRated">
+              <span class="toggle-slider"></span>
+            </label>
+            @if (ru['isRated'].value) {
+              <span class="rated-badge">Rated Match</span>
+            }
+          </div>
+        </div><!-- /Tournament Rules -->
+
+        <!-- Section: Prize Structure -->
+        <div class="card-section">
+          <div class="prize-header">
+            <h2 class="section-title">Prize Structure</h2>
+            <button type="button" class="btn-add-reward" (click)="showAddTier.set(true)">
+              <span class="material-symbols-outlined">add_circle_outline</span>
+              Add Reward
+            </button>
+          </div>
+
+          <!-- Tiers table -->
+          <div class="tiers-table">
+            <div class="tiers-thead">
+              <span>LABEL</span>
+              <span>TYPE / RANK</span>
+              <span>POINTS</span>
+              <span>ACTIONS</span>
+            </div>
+            @for (tier of awardTiers(); track $index) {
+              <div class="tier-row">
+                <span class="tier-name">{{ tier.label || tier.tierType }}</span>
+                <span class="tier-rank">
+                  @if (tier.tierType === 'POSITION') { {{ ordinal(tier.position) }} }
+                  @else if (tier.tierType === 'ALL_PARTICIPANTS') { All Participants }
+                  @else { {{ tier.username || 'Specific Player' }} }
+                </span>
+                <span class="tier-points">{{ tier.points }} Pts</span>
+                <div class="tier-actions">
+                  <button type="button" class="tier-action-btn tier-action-delete" (click)="removeTier($index)">
+                    <span class="material-symbols-outlined">delete_outline</span>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Add New Award Tier panel -->
+          @if (showAddTier()) {
+            <div class="add-tier-panel" [formGroup]="newTierForm">
+              <p class="add-tier-title">Add New Award Tier</p>
+              <div class="add-tier-fields">
+
+                <!-- Tier Type -->
+                <div class="field-group">
+                  <label class="tier-field-label">TIER TYPE</label>
+                  <select class="tier-field-select" formControlName="tierType">
+                    @for (opt of tierTypeOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </div>
+
+                <!-- Position (only for POSITION type) -->
+                @if (nt['tierType'].value === 'POSITION') {
+                  <div class="field-group">
+                    <label class="tier-field-label">POSITION RANK</label>
+                    <input
+                      type="number"
+                      class="tier-field-input"
+                      formControlName="position"
+                      placeholder="1"
+                      min="1">
+                    @if (nt['position'].hasError('required') && nt['position'].touched) {
+                      <span class="field-error">Position is required.</span>
+                    }
+                  </div>
+                }
+
+                <!-- Username search (only for SPECIFIC_USER type) -->
+                @if (nt['tierType'].value === 'SPECIFIC_USER') {
+                  <div class="field-group" style="position:relative">
+                    <label class="tier-field-label">PLAYER USERNAME</label>
+                    <input
+                      type="text"
+                      class="tier-field-input"
+                      [class.input-error]="nt['playerUsername'].hasError('notResolved') && nt['playerUsername'].touched"
+                      formControlName="playerUsername"
+                      placeholder="Search by username…"
+                      autocomplete="off">
+                    @if (userSearchLoading()) {
+                      <span class="user-search-hint">Searching…</span>
+                    }
+                    @if (userSearchResults().length > 0) {
+                      <ul class="user-search-dropdown">
+                        @for (u of userSearchResults(); track u.id) {
+                          <li (click)="selectUserResult(u)">{{ u.username }}</li>
+                        }
+                      </ul>
+                    }
+                    @if (nt['playerUsername'].hasError('notResolved') && nt['playerUsername'].touched) {
+                      <span class="field-error">Select a player from the suggestions.</span>
+                    }
+                  </div>
+                }
+
+                <!-- Points -->
+                <div class="field-group">
+                  <label class="tier-field-label">POINTS</label>
+                  <input type="number" class="tier-field-input" formControlName="points" placeholder="0" min="1">
+                </div>
+
+                <!-- Label -->
+                <div class="field-group">
+                  <label class="tier-field-label">LABEL</label>
+                  <input type="text" class="tier-field-input" formControlName="label" placeholder="e.g. Champion">
+                </div>
+
+              </div>
+              <div class="add-tier-actions">
+                <button type="button" class="btn-tier-cancel" (click)="cancelAddTier()">Cancel</button>
+                <button type="button" class="btn-tier-save" (click)="addTier()">Save Tier</button>
+              </div>
+            </div>
+          }
+
+        </div><!-- /Prize Structure -->
+
+    </div><!-- /form-card step 3 -->
+    }
+
+    <!-- ── STEP 4: Match Rules ───────────────────────────────── -->
+    @if (currentStep() === 4) {
+    <div class="form-card">
+      <div class="card-section">
+        <div class="section-header">
+          <span class="material-symbols-outlined section-icon">rule</span>
+          <h2 class="section-title">Match Rules</h2>
+        </div>
+        <app-match-rules-step
+          [tournamentFormat]="getBackendFormat(f['tournamentFormat'].value)"
+          [maxPlayers]="f['maxPlayers'].value ?? 32"
+          (formatsChange)="roundFormats.set($event)">
+        </app-match-rules-step>
+      </div>
+    </div><!-- /form-card step 4 -->
+    }
+
+    <!-- ── STEP 5: Review Summary ────────────────────────────── -->
+    @if (currentStep() === 5) {
+    <div class="review-page">
+
+        <h1 class="review-title">Review Summary</h1>
+
+        <!-- Card: Basic Information -->
+        <div class="review-card">
+          <div class="review-card-header">
+            <div class="review-card-heading">
+              <span class="material-symbols-outlined review-card-icon">info</span>
+              <h2 class="review-card-title">Basic Information</h2>
+            </div>
+            <button type="button" class="review-edit-btn" (click)="currentStep.set(1)">
+              <span class="material-symbols-outlined">edit</span>
+              Edit
+            </button>
+          </div>
+          <div class="review-card-body">
+            <div class="review-grid">
+              <div class="review-field review-col-2">
+                <p class="review-label">Tournament Name</p>
+                <p class="review-value-name">{{ f['tournamentName'].value }}</p>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Start Date</p>
+                <p class="review-value">{{ f['startDate'].value | date:'MMM d, yyyy' }}</p>
+              </div>
+              <div class="review-field review-col-2">
+                <p class="review-label">Location</p>
+                <p class="review-value">{{ f['location'].value || '—' }}</p>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Season</p>
+                <p class="review-value">{{ reviewSeasonLabel }}</p>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Prize Label</p>
+                <p class="review-value review-value-primary">{{ f['prizeLabel'].value || '—' }}</p>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Tournament Format</p>
+                <span class="review-badge review-badge-blue">{{ reviewFormatLabel }}</span>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Maximum Players</p>
+                <p class="review-value">{{ f['maxPlayers'].value || '—' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Registration Setup -->
+        <div class="review-card">
+          <div class="review-card-header">
+            <div class="review-card-heading">
+              <span class="material-symbols-outlined review-card-icon">how_to_reg</span>
+              <h2 class="review-card-title">Registration Setup</h2>
+            </div>
+            <button type="button" class="review-edit-btn" (click)="currentStep.set(2)">
+              <span class="material-symbols-outlined">edit</span>
+              Edit
+            </button>
+          </div>
+          <div class="review-card-body">
+            <div class="review-grid">
+              <div class="review-field">
+                <p class="review-label">Registration Type</p>
+                <span class="review-badge review-badge-blue">
+                  {{ r['registrationMode'].value === 'manual' ? 'Manual Approval' : 'Automatic' }}
+                </span>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Registration Deadline</p>
+                <p class="review-value" [class.review-value-empty]="!r['registrationDeadline'].value">
+                  {{ r['registrationDeadline'].value ? (r['registrationDeadline'].value | date:'MMM d, yyyy, h:mm a') : 'No hard deadline set' }}
+                </p>
+              </div>
+              <div class="review-field">
+                <p class="review-label">Public Tournament</p>
+                <p class="review-value">{{ r['isPublic'].value ? 'Yes' : 'No' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Rules & Rewards -->
+        <div class="review-card">
+          <div class="review-card-header">
+            <div class="review-card-heading">
+              <span class="material-symbols-outlined review-card-icon">military_tech</span>
+              <h2 class="review-card-title">Rules &amp; Rewards</h2>
+            </div>
+            <button type="button" class="review-edit-btn" (click)="currentStep.set(3)">
+              <span class="material-symbols-outlined">edit</span>
+              Edit
+            </button>
+          </div>
+          <div class="review-card-body">
+            <div class="review-rules-grid">
+              <!-- Left: rating + rules text -->
+              <div class="review-rules-left">
+                <div class="review-field">
+                  <p class="review-label">Rating Type</p>
+                  <span class="review-badge review-badge-green">
+                    {{ ru['isRated'].value ? 'Official Rated Match' : 'Unrated' }}
+                  </span>
+                </div>
+                <div class="review-field">
+                  <p class="review-label">General Rules</p>
+                  <div class="review-rules-box">
+                    {{ ru['generalRules'].value || 'No rules specified.' }}
+                  </div>
+                </div>
+              </div>
+              <!-- Right: prize table -->
+              <div class="review-rules-right">
+                <p class="review-label">Prize Structure</p>
+                <div class="review-prize-table">
+                  <div class="review-prize-thead">
+                    <span>Tier Name</span>
+                    <span>Points</span>
+                    <span>Rank</span>
+                  </div>
+                  @for (tier of awardTiers(); track $index) {
+                    <div class="review-prize-row">
+                      <span class="review-prize-name">{{ tier.label || tier.tierType }}</span>
+                      <span class="review-prize-pts">{{ tier.points }} Pts</span>
+                      <span class="review-prize-rank">
+                        @if (tier.tierType === 'POSITION') { {{ ordinal(tier.position) }} }
+                        @else if (tier.tierType === 'ALL_PARTICIPANTS') { All Participants }
+                        @else { {{ tier.username || '—' }} }
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    </div><!-- /review-page -->
+    }
+
+  </div><!-- /form-wrapper -->
+
+  <!-- ══ BOTTOM ACTION BAR ═════════════════════════════════════ -->
+  <footer class="action-footer">
+    <div class="footer-inner">
+
+      @if (isLastStep()) {
+        <!-- Step 4: Save as draft left, Previous + Create right -->
+        <button type="button" class="btn-draft" [disabled]="saving()" (click)="onSaveDraft()">
+          Save as draft
+        </button>
+        <div class="footer-right">
+          <button type="button" class="btn-back" (click)="onPrevStep()">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Previous
+          </button>
+          <button type="button" class="btn-create" data-cy="wizard-create-btn" [disabled]="saving()" (click)="onCreateTournament()">
+            @if (saving()) { <span class="spinner"></span> Creating... }
+            @else { Create Tournament }
+          </button>
+        </div>
+      } @else {
+        <!-- Steps 1–3: Cancel left, Back + Save draft + Next right -->
+        <button type="button" class="btn-cancel" (click)="onCancel()">Cancel</button>
+        <div class="footer-right">
+          @if (currentStep() > 1) {
+            <button type="button" class="btn-back" (click)="onPrevStep()">
+              <span class="material-symbols-outlined">arrow_back</span>
+              Back
+            </button>
+          }
+          <button type="button" class="btn-draft" [disabled]="saving()" (click)="onSaveDraft()">
+            Save as draft
+          </button>
+          <button type="button" class="btn-next" data-cy="wizard-next-btn" [disabled]="saving()" (click)="onNextStep()">
+            Next Step
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      }
+
+    </div>
+  </footer>
+
+</div>

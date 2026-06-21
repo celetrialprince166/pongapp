@@ -1,0 +1,122 @@
+<div class="step-content">
+  <div class="step-header">
+    <h1 class="step-title">Registration Setup</h1>
+    <p class="step-subtitle">Step 2 of 5: Configure how players join your tournament.</p>
+  </div>
+
+  <div class="form-fields">
+    <!-- Registration Mode -->
+    <div class="form-group">
+      <label class="form-label">Registration Mode</label>
+      <div class="mode-toggle">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="data().mode === 'AUTOMATIC'"
+          (click)="toggleMode('AUTOMATIC')">
+          <span class="material-symbols-outlined mode-icon">check_circle</span>
+          <div>
+            <p class="mode-title">Automatic Approval</p>
+            <p class="mode-description">Players join instantly without review</p>
+          </div>
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="data().mode === 'MANUAL'"
+          (click)="toggleMode('MANUAL')">
+          <span class="material-symbols-outlined mode-icon">pending</span>
+          <div>
+            <p class="mode-title">Manual Approval</p>
+            <p class="mode-description">Review each registration before accepting</p>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Registration Deadline -->
+    <div class="form-group">
+      <div class="label-with-toggle">
+        <label class="form-label">Registration Deadline</label>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            [checked]="data().hasDeadline"
+            (change)="toggleDeadline($any($event.target).checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      @if (data().hasDeadline) {
+        <input
+          type="date"
+          class="form-input"
+          [min]="getMinDeadlineDate()"
+          [ngModel]="data().deadline"
+          (ngModelChange)="updateField('deadline', $event)">
+      } @else {
+        <div class="disabled-field">
+          <span class="material-symbols-outlined">lock</span>
+          <span>No deadline - registration stays open until tournament starts</span>
+        </div>
+      }
+    </div>
+
+    <!-- Entry Fee -->
+    <div class="form-group">
+      <div class="label-with-toggle">
+        <label class="form-label">Entry Fee</label>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            [checked]="!data().isFree"
+            (change)="toggleFee(!$any($event.target).checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      @if (!data().isFree) {
+        <div class="currency-input-wrapper">
+          <span class="currency-symbol">$</span>
+          <input
+            type="number"
+            class="form-input currency-input"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            [ngModel]="data().entryFee"
+            (ngModelChange)="updateField('entryFee', $event)">
+        </div>
+      } @else {
+        <div class="disabled-field">
+          <span class="material-symbols-outlined">paid</span>
+          <span>Free entry - no payment required</span>
+        </div>
+      }
+    </div>
+
+    <!-- Additional Notes -->
+    <div class="form-group">
+      <label class="form-label">Additional Notes</label>
+      <textarea
+        class="form-textarea"
+        rows="4"
+        placeholder="Add any special instructions or requirements for players..."
+        maxlength="500"
+        [ngModel]="data().notes"
+        (ngModelChange)="updateField('notes', $event)"></textarea>
+      <div class="character-counter">
+        <span [class.limit-near]="getCharacterCount() > 450">
+          {{ getCharacterCount() }} / 500
+        </span>
+      </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <span class="material-symbols-outlined banner-icon">info</span>
+      <div>
+        <p class="banner-title">Registration Settings</p>
+        <p class="banner-text">These settings can be changed later, but changing the registration mode after players have joined may cause confusion.</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,348 @@
+/**
+ * Tournament Discovery Page — Stitch-aligned Design
+ * Light theme with card-based tournament grid
+ */
+
+/* Container */
+.tournament-list-page {
+  padding: 2rem;
+  min-height: 100vh;
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.page-subtitle {
+  color: #64748B;
+  margin: 0.375rem 0 0;
+  font-size: 0.9375rem;
+}
+
+.btn-host {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.5625rem 1.125rem;
+  background: #0f1922;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-host:hover {
+  background: #1e2d3d;
+}
+
+/* Filter & Search Bar */
+.filter-search-bar {
+  background: #FFFFFF;
+  padding: 10px;
+  border-radius: 24px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+/* Tab Group */
+.tab-group {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #F1F5F9;
+  border-radius: 12px;
+}
+
+.tab-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #0F172A;
+}
+
+/* STEP 6 FIX: Active tab uses blue, not green */
+.tab-btn.active {
+  background: white;
+  color: #1978e5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border-bottom: 2px solid #1978e5;
+}
+
+/* Search Section */
+.search-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: flex-end;
+  padding: 0 8px;
+}
+
+.search-bar {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+/* STEP 5 FIX: SVG icon, not text */
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  stroke: #94A3B8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 16px 8px 40px;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #0F172A;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #1978e5;
+  background: #FFFFFF;
+}
+
+.search-input::placeholder {
+  color: #94A3B8;
+}
+
+.filter-tune-btn {
+  padding: 8px;
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  color: #64748B;
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.filter-tune-btn:hover {
+  color: #1978e5;
+}
+
+/* Error Banner */
+.error-banner {
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.error-message {
+  color: #991B1B;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-dismiss {
+  background: transparent;
+  border: none;
+  color: #991B1B;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #E2E8F0;
+  border-top-color: #1978e5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-container p {
+  color: #64748B;
+  font-size: 14px;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.empty-icon {
+  stroke: #CBD5E1;
+  margin-bottom: 1.25rem;
+}
+
+.empty-message {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0F172A;
+  margin: 0 0 0.5rem;
+}
+
+.empty-hint {
+  color: #64748B;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Tournament Grid */
+.tournament-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .tournament-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .tournament-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .tournament-grid { grid-template-columns: 1fr; }
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0 0.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination-info {
+  font-size: 0.8125rem;
+  color: #64748B;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0F172A;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: #1978e5;
+  color: #1978e5;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0F172A;
+  min-width: 48px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tournament-list-page { padding: 1rem; }
+  .page-header { flex-direction: column; gap: 1rem; }
+
+  .filter-search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-group { flex-wrap: wrap; }
+
+  .search-section {
+    justify-content: stretch;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .search-bar { max-width: 100%; }
+
+  .pagination { flex-direction: column; align-items: flex-start; }
+}

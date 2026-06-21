@@ -1,0 +1,18 @@
+<div class="layout">
+  <aside>
+    <app-sidebar></app-sidebar>
+  </aside>
+
+  <div class="content">
+    <app-header></app-header>
+    <router-outlet></router-outlet>
+  </div>
+
+  <!-- Theme Toggle — fixed bottom-right, persists across all pages -->
+  <button class="theme-toggle" (click)="toggleTheme()" aria-label="Toggle theme">
+    <span class="material-symbols-outlined">dark_mode</span>
+  </button>
+
+  <!-- Global Toast Notifications -->
+  <app-toast></app-toast>
+</div>

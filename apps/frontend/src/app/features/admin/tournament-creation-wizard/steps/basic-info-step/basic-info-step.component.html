@@ -1,0 +1,126 @@
+<div class="step-content">
+  <div class="step-header">
+    <h1 class="step-title">General Details</h1>
+    <p class="step-subtitle">Step 1 of 4: Set up the core information for your event.</p>
+  </div>
+
+  <div class="form-fields">
+    <!-- Tournament Name -->
+    <div class="form-group">
+      <label class="form-label">Tournament Name</label>
+      <input
+        type="text"
+        class="form-input"
+        placeholder="e.g., Downtown Winter Classic 2026"
+        [ngModel]="data().name"
+        (ngModelChange)="updateField('name', $event)">
+    </div>
+
+    <!-- Season and Location -->
+    <div class="form-row">
+      <!-- Season -->
+      <div class="form-group">
+        <label class="form-label">Season</label>
+
+        @if (seasonLoading()) {
+          <!-- Loading state -->
+          <div class="select-wrapper">
+            <select class="form-select" disabled>
+              <option>Loading...</option>
+            </select>
+            <span class="material-symbols-outlined select-icon">expand_more</span>
+          </div>
+        } @else if (hasActiveSeason()) {
+          <!-- Active season found — single option dropdown -->
+          <div class="select-wrapper">
+            <select
+              class="form-select"
+              [ngModel]="data().season"
+              (ngModelChange)="updateField('season', $event ? +$event : null)">
+              <option [ngValue]="null">Select Season...</option>
+              @if (activeSeasonOption()) {
+                <option [ngValue]="activeSeasonOption()!.value">
+                  {{ activeSeasonOption()!.label }}
+                </option>
+              }
+            </select>
+            <span class="material-symbols-outlined select-icon">expand_more</span>
+          </div>
+        } @else {
+          <!-- No active season — info notice -->
+          <div class="no-active-season-notice">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>No active season available. Create an active season in Season Management to link this tournament.</p>
+          </div>
+        }
+      </div>
+
+      <!-- Location -->
+      <div class="form-group">
+        <label class="form-label">Location</label>
+        <div class="input-with-icon">
+          <span class="material-symbols-outlined input-icon">location_on</span>
+          <input
+            type="text"
+            class="form-input with-icon"
+            placeholder="Search for a venue..."
+            [ngModel]="data().location"
+            (ngModelChange)="updateField('location', $event)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Venue Verification Info Banner -->
+    <div class="info-banner">
+      <span class="material-symbols-outlined banner-icon">info</span>
+      <div>
+        <p class="banner-title">Venue Verification</p>
+        <p class="banner-text">Verified venues ensure better automated scheduling and player travel calculations.</p>
+      </div>
+    </div>
+
+    <!-- Tournament Format -->
+    <div class="form-group">
+      <label class="form-label">Tournament Format</label>
+      <div class="format-grid">
+        @for (format of formats; track format.id) {
+          <div
+            class="format-card"
+            [class.selected]="isFormatSelected(format.id)"
+            (click)="selectFormat(format.id)">
+            <div class="format-header">
+              <div class="format-icon-wrapper">
+                <span class="material-symbols-outlined format-icon">{{ format.icon }}</span>
+              </div>
+              <div class="format-check">
+                @if (isFormatSelected(format.id)) {
+                  <span class="material-symbols-outlined check-icon">done</span>
+                }
+              </div>
+            </div>
+            <h3 class="format-title">{{ format.title }}</h3>
+            <p class="format-description">{{ format.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Maximum Participants -->
+    <div class="form-group">
+      <label class="form-label">Maximum Number of Players</label>
+      <div class="participants-input-wrapper">
+        <input
+          type="number"
+          class="form-input participants-input"
+          placeholder="e.g., 32"
+          min="2"
+          max="256"
+          [ngModel]="data().maxParticipants"
+          (ngModelChange)="updateField('maxParticipants', $event)">
+        <span class="participants-label">Players</span>
+      </div>
+    </div>
+  </div>
+</div>

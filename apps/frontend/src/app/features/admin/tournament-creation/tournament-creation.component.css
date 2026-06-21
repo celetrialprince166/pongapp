@@ -1,0 +1,433 @@
+/**
+ * Tournament Creation Component Styles
+ * Theme-aware styles using CSS variables for light/dark mode support
+ */
+
+/* Container */
+.tournament-creation {
+  padding: 2rem;
+  background-color: var(--admin-bg-primary);
+  min-height: 100vh;
+  color: var(--admin-text-primary);
+}
+
+/* Page Header */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--admin-text-primary);
+  margin: 0;
+}
+
+/* Error Banner */
+.error-banner {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--admin-danger-500);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-message {
+  color: var(--admin-danger-300);
+  font-size: 0.875rem;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--admin-danger-300);
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+}
+
+.btn-close:hover {
+  color: var(--admin-text-primary);
+}
+
+/* Tournament Form */
+.tournament-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Form Section */
+.form-section {
+  background-color: var(--admin-bg-secondary);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--admin-border-primary);
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-tertiary);
+  margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  background-color: var(--admin-bg-tertiary);
+  border: 1px solid var(--admin-border-primary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--admin-text-primary);
+  width: 100%;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--admin-primary-500);
+}
+
+.form-input.error,
+.form-textarea.error {
+  border-color: var(--admin-danger-500);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--admin-text-disabled);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.error-text {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--admin-danger-500);
+  margin-top: 0.5rem;
+}
+
+/* Form Row */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-group-item {
+  background-color: var(--admin-bg-tertiary);
+  border: 2px solid var(--admin-border-primary);
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 150px;
+}
+
+.btn-group-item:hover {
+  border-color: var(--admin-primary-500);
+  color: var(--admin-primary-500);
+}
+
+.btn-group-item.active {
+  background-color: var(--admin-primary-500);
+  border-color: var(--admin-primary-500);
+  color: var(--admin-text-inverse);
+}
+
+/* Toggle Item */
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: var(--admin-bg-tertiary);
+  border-radius: 6px;
+}
+
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--admin-text-primary);
+  margin: 0;
+}
+
+.toggle-description {
+  font-size: 0.75rem;
+  color: var(--admin-text-tertiary);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  background-color: var(--admin-border-primary);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  flex-shrink: 0;
+}
+
+.toggle-switch.active {
+  background-color: var(--admin-primary-500);
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: var(--admin-text-inverse);
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(24px);
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 2rem 0;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--admin-primary-500);
+  color: var(--admin-text-inverse);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+  min-width: 160px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--admin-primary-600);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--admin-bg-tertiary);
+  color: var(--admin-text-primary);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--admin-bg-hover);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--admin-text-tertiary);
+  border: 1px solid var(--admin-border-primary);
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  border-color: var(--admin-primary-500);
+  color: var(--admin-primary-500);
+}
+
+/* Small Spinner */
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tournament-creation {
+    padding: 1rem;
+  }
+
+  .tournament-form {
+    max-width: 100%;
+  }
+
+  .form-section {
+    padding: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .btn-group-item {
+    min-width: 100%;
+  }
+
+  .toggle-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .toggle-switch {
+    align-self: flex-end;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Theme-aware date/number picker */
+.form-input[type="date"],
+.form-input[type="datetime-local"],
+.form-input[type="number"] {
+  color-scheme: light dark;
+}
+
+/* Enhanced date input styling */
+.date-input,
+.datetime-input {
+  position: relative;
+  cursor: pointer;
+  min-width: 220px;
+}
+
+.date-input::-webkit-calendar-picker-indicator,
+.datetime-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover,
+.datetime-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: transparent;
+}
+
+.date-input:focus::-webkit-calendar-picker-indicator,
+.datetime-input:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+/* Firefox date/datetime styling */
+.date-input::-moz-calendar-picker-indicator,
+.datetime-input::-moz-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.date-input::-moz-calendar-picker-indicator:hover,
+.datetime-input::-moz-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Select dropdown arrow */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}

@@ -1,0 +1,32 @@
+<div class="wizard-stepper">
+  @for (step of steps(); track step.number; let i = $index) {
+    <!-- Step Circle and Label -->
+    <div class="step-container"
+         [class.clickable]="step.completed && !step.active"
+         (click)="onStepClick(step.number, step.completed)">
+      <div class="step-circle"
+           [class.active]="step.active"
+           [class.completed]="step.completed && !step.active"
+           [class.upcoming]="!step.completed && !step.active">
+        @if (step.completed && !step.active) {
+          <span class="material-symbols-outlined check-icon">check</span>
+        } @else {
+          <span class="step-number">{{ step.number }}</span>
+        }
+      </div>
+      <span class="step-label"
+            [class.active]="step.active"
+            [class.completed]="step.completed"
+            [class.upcoming]="!step.completed && !step.active">
+        {{ step.label }}
+      </span>
+    </div>
+
+    <!-- Connection Line -->
+    @if (!isLastStep(i)) {
+      <div class="stepper-line"
+           [class.active]="step.completed">
+      </div>
+    }
+  }
+</div>

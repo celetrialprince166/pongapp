@@ -1,0 +1,36 @@
+<div class="season-progress-card">
+    <h3 class="card-title">Season Progress</h3>
+
+    <div class="progress-section">
+        <div class="progress-header">
+            <span class="label">Win/Loss Ratio</span>
+            <span class="value">{{winRatio()}}%</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar primary" [style.width.%]="winRatio()"></div>
+        </div>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-header">
+            <span class="label">Games Played</span>
+            <span class="value">{{gamesPlayed()}} / {{totalGames()}}</span>
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar primary" [style.width.%]="gamesPlayedPercentage"></div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stats-footer">
+        <div class="stat-item">
+            <span class="stat-value">{{playedCount()}}</span>
+            <span class="stat-label">PLAYED</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value green">{{winStreak()}}</span>
+            <span class="stat-label">WIN STREAK</span>
+        </div>
+    </div>
+</div>

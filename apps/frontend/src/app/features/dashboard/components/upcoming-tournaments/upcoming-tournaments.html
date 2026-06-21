@@ -1,0 +1,36 @@
+<div class="tournaments-card">
+    <div class="card-header">
+        <h3 class="card-title">Upcoming Events</h3>
+        <a class="view-all-link" routerLink="/tournaments">View All</a>
+    </div>
+
+    <div class="tournaments-list" *ngIf="tournaments().length > 0">
+        <div class="tournament-item" *ngFor="let tournament of tournaments()" (click)="navigateToTournament(tournament.id)">
+            <div class="tournament-icon-circle">
+                <lucide-icon [name]="getTournamentIcon(tournament.tournament_format)" [size]="20"></lucide-icon>
+            </div>
+
+            <div class="tournament-content">
+                <div class="tournament-header">
+                    <span class="tournament-name" [title]="tournament.name">{{tournament.name}}</span>
+                    <span class="status-badge">UPCOMING</span>
+                </div>
+                <div class="tournament-date">{{formatDate(tournament.start_date)}}</div>
+                <div class="tournament-participants">
+                    <lucide-icon [name]="usersIcon" [size]="14"></lucide-icon>
+                    <span>{{tournament.participant_count || 0}}/{{tournament.max_participants}}</span>
+                </div>
+            </div>
+
+            <button class="arrow-button" (click)="navigateToTournament(tournament.id); $event.stopPropagation()">
+                <lucide-icon [name]="arrowIcon" [size]="16"></lucide-icon>
+            </button>
+        </div>
+    </div>
+
+    <div class="empty-state" *ngIf="tournaments().length === 0 && !isLoading()">
+        <lucide-icon [name]="calendarIcon" class="calendar-icon" [size]="48"></lucide-icon>
+        <h4 class="empty-title">No upcoming tournaments</h4>
+        <p class="empty-text">Check back later for new events or create your own!</p>
+    </div>
+</div>

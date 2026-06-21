@@ -1,0 +1,10 @@
+<div class="welcome-box">
+    <div class="avatar-container">
+        <img class="avatar-image" [src]="user?.avatar || 'assets/default-avatar.png'" alt="User Avatar">
+        <span class="online-status"></span>
+    </div>
+    <div class="welcome-text-container">
+        <h2 class="welcome-message">Welcome back, <span class="username">{{user?.username}}</span>!</h2>
+        <p class="player-status">Player Status: <span class="status-active">Active</span></p>
+    </div>
+</div>

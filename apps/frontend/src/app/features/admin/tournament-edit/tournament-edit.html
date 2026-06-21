@@ -1,0 +1,207 @@
+<div class="tournament-edit">
+  <!-- Header with Back Button -->
+  <div class="page-header">
+    <button class="btn-back" (click)="goBack()">
+      <lucide-icon [img]="ArrowLeft" [size]="20"></lucide-icon>
+    </button>
+    <div class="header-text">
+      <div class="breadcrumb">Tournaments / Edit Tournament</div>
+      <h1 class="page-title">Edit Tournament</h1>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading tournament...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-banner">
+      <span class="error-message">{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Edit Form -->
+  @if (tournament() && !loading()) {
+    <div class="form-container">
+      <form class="edit-form" (submit)="$event.preventDefault(); onSaveChanges()">
+
+        <!-- Tournament Name -->
+        <div class="form-group full-width">
+          <label class="form-label">Tournament Name</label>
+          <input
+            type="text"
+            class="form-input"
+            [value]="formData().name"
+            (input)="updateFormField('name', $any($event.target).value)"
+            placeholder="e.g., Summer Open 2024">
+        </div>
+
+        <!-- Start Date and Format Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input
+              type="date"
+              class="form-input date-input"
+              [value]="formData().date"
+              (input)="updateFormField('date', $any($event.target).value)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tournament Format</label>
+            <select
+              class="form-select"
+              [ngModel]="formData().format"
+              (ngModelChange)="updateFormField('format', $event)"
+              name="format">
+              @for (option of formatOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- End Date and Registration Deadline Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">End Date</label>
+            <input
+              type="date"
+              class="form-input date-input"
+              [value]="formData().endDate"
+              (input)="updateFormField('endDate', $any($event.target).value)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Registration Deadline</label>
+            <input
+              type="date"
+              class="form-input date-input"
+              [value]="formData().registrationDeadline"
+              (input)="updateFormField('registrationDeadline', $any($event.target).value)">
+          </div>
+        </div>
+
+        <!-- Participant Limit and Status Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Participant Limit</label>
+            <input
+              type="number"
+              class="form-input"
+              [value]="formData().maxParticipants"
+              (input)="updateFormField('maxParticipants', +$any($event.target).value)"
+              min="2"
+              max="256">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Current Status</label>
+            <select
+              class="form-select"
+              [ngModel]="formData().status"
+              (ngModelChange)="updateFormField('status', $event)"
+              name="status">
+              @for (option of statusOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Season and Prize Label Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Season</label>
+            <select
+              class="form-select"
+              [ngModel]="formData().season"
+              (ngModelChange)="updateFormField('season', $event ? +$event : null)"
+              name="season">
+              <option [ngValue]="null">No Season</option>
+              @for (s of seasons(); track s.id) {
+                <option [ngValue]="s.id">{{ s.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Prize Label</label>
+            <input
+              type="text"
+              class="form-input"
+              [value]="formData().prize_label"
+              (input)="updateFormField('prize_label', $any($event.target).value)"
+              placeholder="e.g. ₵500 Cash Prize"
+              maxlength="100">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group full-width">
+          <label class="form-label">Description</label>
+          <div class="text-editor">
+            <!-- Simple toolbar (styling only, no functionality for now) -->
+            <div class="editor-toolbar">
+              <button type="button" class="toolbar-btn" title="Bold">B</button>
+              <button type="button" class="toolbar-btn" title="Italic">I</button>
+              <button type="button" class="toolbar-btn" title="List">☰</button>
+              <button type="button" class="toolbar-btn" title="Link">🔗</button>
+            </div>
+            <textarea
+              class="form-textarea"
+              [value]="formData().description"
+              (input)="updateFormField('description', $any($event.target).value)"
+              rows="6"
+              placeholder="Enter tournament description..."></textarea>
+          </div>
+        </div>
+
+        <!-- Actions Row -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-delete"
+            (click)="onDeleteTournament()">
+            🗑 Delete Tournament
+          </button>
+
+          <div class="action-buttons">
+            <button
+              type="button"
+              class="btn-secondary"
+              (click)="onCancel()">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="saving()">
+              @if (saving()) {
+                <span class="spinner-small"></span>
+                Saving...
+              } @else {
+                Save Changes
+              }
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Metadata Footer -->
+      <div class="form-footer">
+        <span class="footer-text">
+          CREATED: {{ formatDateForDisplay(tournament()!.start_date) }}
+        </span>
+        <span class="footer-text">
+          LAST MODIFIED: {{ getTimeAgo(tournament()!.start_date) }}
+        </span>
+      </div>
+    </div>
+  }
+</div>

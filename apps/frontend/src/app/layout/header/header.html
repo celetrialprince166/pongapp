@@ -1,0 +1,37 @@
+<header class="page-header">
+
+  <!-- Left: Page Title + Subtitle -->
+  <div class="page-title-block">
+    <h1 class="page-title">{{ pageInfo().title }}</h1>
+    <p class="page-subtitle">{{ pageInfo().subtitle }}</p>
+  </div>
+
+  <!-- Right: Notification + User info + Avatar -->
+  <div class="header-actions">
+
+    <!-- Notification Button -->
+    <button class="notif-btn" aria-label="Notifications">
+      <span class="material-symbols-outlined">notifications</span>
+      <span class="notif-dot"></span>
+    </button>
+
+    <!-- User Name + Rank -->
+    @if (currentUser()) {
+      <div class="user-text">
+        <p class="user-name">{{ getUserDisplayName() }}</p>
+        <p class="user-rank">{{ getRankLabel() }}</p>
+      </div>
+
+      <!-- Avatar -->
+      <div class="user-avatar">
+        @if (currentUser()!.avatar) {
+          <img [src]="currentUser()!.avatar" [alt]="currentUser()!.username" class="avatar-img">
+        } @else {
+          <div class="avatar-fallback">{{ getUserInitials() }}</div>
+        }
+      </div>
+    }
+
+  </div>
+
+</header>

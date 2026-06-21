@@ -1,0 +1,217 @@
+<div class="bracket-container">
+
+  @if (!hasMatches()) {
+    <div class="bracket-empty">
+      <p class="empty-message">Bracket will be available when the tournament starts</p>
+    </div>
+  } @else {
+
+    <!-- ── View Toggle ─────────────────────────────────────────────── -->
+    <div class="view-toggle">
+      <button class="toggle-btn" [class.active]="viewMode() === 'bracket'"
+              (click)="setViewMode('bracket')">
+        🌲 Bracket View
+      </button>
+      <button class="toggle-btn" [class.active]="viewMode() === 'list'"
+              (click)="setViewMode('list')">
+        ≡ List View
+      </button>
+    </div>
+
+    @if (viewMode() === 'bracket') {
+
+      <!-- ── Group Stage (GROUP_KNOCKOUT only) ────────────────────── -->
+      @if (tournamentFormat() === 'GROUP_KNOCKOUT' && groupStandings().length > 0) {
+        <div class="group-stage-section">
+          <h2 class="section-title">Group Stage</h2>
+
+          <div class="group-tables-row">
+            @for (group of groupStandings(); track group.group.id) {
+              <div class="group-table-wrapper">
+                <h3 class="group-name">{{ group.group.name }}</h3>
+                <table class="group-table">
+                  <thead>
+                    <tr>
+                      <th class="col-player">Player</th>
+                      <th>P</th><th>W</th><th>L</th>
+                      <th>GW</th><th>GL</th><th>GD</th>
+                      <th>Pts</th><th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of group.standings; track row.player) {
+                      <tr [class.row-advances]="row.advances">
+                        <td class="col-player">{{ row.player_username }}</td>
+                        <td>{{ row.matches_played }}</td>
+                        <td>{{ row.wins }}</td>
+                        <td>{{ row.losses }}</td>
+                        <td>{{ row.games_won }}</td>
+                        <td>{{ row.games_lost }}</td>
+                        <td>{{ row.goal_difference }}</td>
+                        <td class="col-pts">{{ row.points }}</td>
+                        <td class="col-adv">
+                          @if (row.advances) {
+                            <span class="advance-check">✓</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+
+          <div class="knockout-separator">
+            <span class="separator-label">KNOCKOUT STAGE</span>
+          </div>
+        </div>
+      }
+
+      <!-- ── Bracket Grid ────────────────────────────────────────── -->
+      <div class="bracket-scroll" #bracketScrollRef>
+        <div class="bracket-grid">
+          @for (round of bracketRounds(); track round.roundNumber) {
+            <div class="bracket-round">
+
+              <div class="round-header">
+                <h3 class="round-title">{{ round.roundName }}</h3>
+                <span class="round-subtitle">Round {{ round.roundNumber }}</span>
+              </div>
+
+              <div class="round-matches">
+                @for (match of round.matches; track match.id) {
+                  <div class="match-wrapper">
+                    <div class="bracket-match"
+                         [class]="getMatchStatusClass(match)"
+                         [attr.data-match-id]="match.id">
+
+                      <div class="match-number">Match {{ match.match_number }}</div>
+
+                      <!-- LIVE badge -->
+                      @if (match.status === 'live') {
+                        <div class="match-status live">🔴 LIVE</div>
+                      }
+
+                      <!-- Player 1 -->
+                      <div class="match-player" [class.winner]="isWinner(match, 'player1')">
+                        <span class="player-name">{{ getPlayerName(match, 'player1') }}</span>
+                        @if (match.player1_score !== null && match.player1_score !== undefined) {
+                          <span class="player-score">{{ match.player1_score }}</span>
+                        }
+                      </div>
+
+                      <div class="match-divider"></div>
+
+                      <!-- Player 2 -->
+                      <div class="match-player" [class.winner]="isWinner(match, 'player2')">
+                        <span class="player-name">{{ getPlayerName(match, 'player2') }}</span>
+                        @if (match.player2_score !== null && match.player2_score !== undefined) {
+                          <span class="player-score">{{ match.player2_score }}</span>
+                        }
+                      </div>
+
+                      <!-- Status badge (non-live) -->
+                      @if (match.is_bye) {
+                        <div class="match-status bye">BYE</div>
+                      } @else if (isCompleted(match) && match.status !== 'live') {
+                        <div class="match-status completed">Completed</div>
+                      } @else if (match.player1 && match.player2 && match.status !== 'live') {
+                        <div class="match-status upcoming">Upcoming</div>
+                      }
+
+                      <!-- Admin action buttons (only shown when parent passes outputs) -->
+                      @if (isAdmin() && !match.is_bye) {
+                        <div class="match-admin-actions">
+                          @if (match.status === 'live') {
+                            <button class="match-action-btn match-action-score"
+                                    (click)="adminScoreMatch.emit(match)">● Score</button>
+                          } @else if (isCompleted(match)) {
+                            <button class="match-action-btn match-action-correct"
+                                    (click)="adminCorrectMatch.emit(match)">✎ Correct</button>
+                          } @else if (match.player1 && match.player2) {
+                            <button class="match-action-btn match-action-start"
+                                    (click)="adminStartMatch.emit(match)">▶ Start</button>
+                          }
+                        </div>
+                      }
+
+                    </div>
+                    <!-- no .match-connector — SVG handles this -->
+                  </div>
+                }
+              </div>
+
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- ── Legend ─────────────────────────────────────────────────── -->
+      <div class="bracket-legend">
+        <div class="legend-item">
+          <div class="legend-indicator completed"></div>
+          <span>Completed</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-indicator ready"></div>
+          <span>Ready to Play</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-indicator pending"></div>
+          <span>Awaiting Players</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-indicator live"></div>
+          <span>Live</span>
+        </div>
+      </div>
+
+    } @else {
+
+      <!-- ── List View ───────────────────────────────────────────── -->
+      <div class="list-view">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th>Round</th>
+              <th>Match</th>
+              <th>Player 1</th>
+              <th>Score</th>
+              <th>Player 2</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (round of bracketRounds(); track round.roundNumber) {
+              @for (match of round.matches; track match.id) {
+                <tr>
+                  <td>{{ round.roundName }}</td>
+                  <td>{{ match.match_number }}</td>
+                  <td [class.winner-cell]="isWinner(match, 'player1')">
+                    {{ getPlayerName(match, 'player1') }}
+                  </td>
+                  <td class="score-cell">
+                    @if (isCompleted(match)) {
+                      {{ match.player1_score ?? 0 }} – {{ match.player2_score ?? 0 }}
+                    } @else { — }
+                  </td>
+                  <td [class.winner-cell]="isWinner(match, 'player2')">
+                    {{ getPlayerName(match, 'player2') }}
+                  </td>
+                  <td>
+                    <span class="status-pill" [ngClass]="getMatchStatusClass(match)">
+                      {{ getListStatusLabel(match) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+    }
+  }
+
+</div>

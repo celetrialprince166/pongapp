@@ -1,0 +1,75 @@
+<div class="ac-widget">
+  <div class="ac-header">
+    <h3 class="ac-title">Active Challenges</h3>
+    <a routerLink="/challenge-hub" class="ac-see-all">See all</a>
+  </div>
+
+  @if (isLoading()) {
+    <div class="ac-skeleton">
+      <div class="skeleton-row"></div>
+      <div class="skeleton-row"></div>
+    </div>
+  } @else if (!hasAny()) {
+    <div class="ac-empty">
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l-2-2"/><path d="M16 16l3 3"/><path d="M19 21l2-2"/>
+        <path d="M9.5 6.5l5 5"/><path d="M3 3l18 18"/>
+      </svg>
+      <p>No pending challenges</p>
+      <a routerLink="/challenge-hub" class="ac-cta">Challenge someone</a>
+    </div>
+  } @else {
+
+    @if (incoming().length > 0) {
+      <div class="ac-section">
+        <span class="ac-section-label">Incoming</span>
+        @for (c of incoming(); track c.id) {
+          <div class="ac-row" [class.ac-row--forced]="c.is_forced">
+            <div class="ac-row-info">
+              <span class="ac-opponent">{{ c.challenger_username }}</span>
+              <span class="ac-meta">{{ formatChallenge(c) }}
+                @if (c.is_forced) { <span class="ac-forced-badge">Forced</span> }
+              </span>
+            </div>
+            <div class="ac-row-actions">
+              <button class="ac-btn ac-btn--accept"
+                [disabled]="actionInProgress() === c.id"
+                (click)="accept(c.id)">
+                @if (actionInProgress() === c.id) { … } @else { Accept }
+              </button>
+              @if (!c.is_forced) {
+                <button class="ac-btn ac-btn--decline"
+                  [disabled]="actionInProgress() === c.id"
+                  (click)="decline(c.id)">
+                  Decline
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (sent().length > 0) {
+      <div class="ac-section">
+        <span class="ac-section-label">Sent</span>
+        @for (c of sent(); track c.id) {
+          <div class="ac-row">
+            <div class="ac-row-info">
+              <span class="ac-opponent">{{ c.challenged_username }}</span>
+              <span class="ac-meta">{{ formatChallenge(c) }}</span>
+            </div>
+            <div class="ac-row-actions">
+              <button class="ac-btn ac-btn--cancel"
+                [disabled]="actionInProgress() === c.id"
+                (click)="cancel(c.id)">
+                @if (actionInProgress() === c.id) { … } @else { Cancel }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+  }
+</div>

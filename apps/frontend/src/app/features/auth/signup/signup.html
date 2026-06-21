@@ -1,0 +1,82 @@
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Create Account</h2>
+        <p class="subtitle">Join the community today</p>
+
+        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="first_name">First Name</label>
+                    <input type="text" id="first_name" formControlName="first_name" placeholder="First Name"
+                        [class.error]="signupForm.get('first_name')?.invalid && signupForm.get('first_name')?.touched">
+                </div>
+                <div class="form-group half">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" id="last_name" formControlName="last_name" placeholder="Last Name"
+                        [class.error]="signupForm.get('last_name')?.invalid && signupForm.get('last_name')?.touched">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" formControlName="username" placeholder="Choose a username"
+                    data-cy="signup-username-input"
+                    [class.error]="signupForm.get('username')?.invalid && signupForm.get('username')?.touched">
+                <div class="error-msg"
+                    *ngIf="signupForm.get('username')?.hasError('required') && signupForm.get('username')?.touched">
+                    Username is required
+                </div>
+                <div class="error-msg"
+                    *ngIf="signupForm.get('username')?.hasError('minlength') && signupForm.get('username')?.touched">
+                    Username must be at least 3 characters
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" formControlName="email" placeholder="Enter your email"
+                    data-cy="signup-email-input"
+                    [class.error]="signupForm.get('email')?.invalid && signupForm.get('email')?.touched">
+                <div class="error-msg"
+                    *ngIf="signupForm.get('email')?.hasError('email') && signupForm.get('email')?.touched">
+                    Please enter a valid email
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" formControlName="password" placeholder="Create a password"
+                    data-cy="signup-password-input"
+                    [class.error]="signupForm.get('password')?.invalid && signupForm.get('password')?.touched">
+                <div class="error-msg"
+                    *ngIf="signupForm.get('password')?.hasError('minlength') && signupForm.get('password')?.touched">
+                    Password must be at least 8 characters
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="password_confirm" formControlName="password_confirm"
+                    placeholder="Confirm your password"
+                    [class.error]="signupForm.get('password_confirm')?.invalid && signupForm.get('password_confirm')?.touched">
+                <div class="error-msg"
+                    *ngIf="signupForm.get('password_confirm')?.hasError('passwordMismatch') && signupForm.get('password_confirm')?.touched">
+                    Passwords do not match
+                </div>
+            </div>
+
+            <div class="error-banner" *ngIf="errorMessage()" data-cy="signup-error-msg">
+                {{ errorMessage() }}
+            </div>
+
+            <button type="submit" data-cy="signup-submit-btn" [disabled]="signupForm.invalid || isLoading()">
+                {{ isLoading() ? 'Creating Account...' : 'Sign Up' }}
+            </button>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a routerLink="/login" data-cy="login-link">Login</a></p>
+            </div>
+        </form>
+    </div>
+</div>

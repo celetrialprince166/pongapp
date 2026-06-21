@@ -1,0 +1,95 @@
+<div class="ls-page">
+
+  @if (loading()) {
+    <div class="ls-loading">
+      <span class="ls-spinner"></span>
+      <p>Loading match…</p>
+    </div>
+  } @else if (error() && !match()) {
+    <div class="ls-error-state">
+      <p>{{ error() }}</p>
+      <a routerLink="/dashboard" class="ls-btn ls-btn--secondary">Back to Dashboard</a>
+    </div>
+  } @else if (match()) {
+
+    <!-- Header -->
+    <div class="ls-header">
+      <div class="ls-header-left">
+        <span class="ls-live-dot"></span>
+        <h1 class="ls-title">LIVE MATCH</h1>
+      </div>
+      <span class="ls-format-badge">{{ getFormatLabel() }}</span>
+    </div>
+
+    <!-- Status bar -->
+    <div class="ls-status-bar">
+      <span class="ls-status-label" [class.ls-status--live]="match()!.status === 'IN_PROGRESS'">
+        {{ match()!.status === 'IN_PROGRESS' ? '● IN PROGRESS' : match()!.status }}
+      </span>
+      <span class="ls-target-label">{{ getTargetLabel() }}</span>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="ls-scoreboard">
+
+      <!-- Player 1 -->
+      <div class="ls-player" [class.ls-player--leading]="getLeadingPlayer() === 'player1'">
+        <div class="ls-player-avatar">{{ (match()!.player1_username ?? 'P1')[0].toUpperCase() }}</div>
+        <h2 class="ls-player-name">{{ match()!.player1_username ?? 'Player 1' }}</h2>
+        <div class="ls-score" [class.ls-score--winning]="getLeadingPlayer() === 'player1'">
+          {{ match()!.player1_games_won ?? 0 }}
+        </div>
+        <p class="ls-score-label">{{ getScoreLabel() }}</p>
+        <button
+          class="ls-btn ls-btn--point"
+          (click)="addPoint('player1')"
+          [disabled]="submitting() || match()!.status !== 'IN_PROGRESS'">
+          + Point
+        </button>
+      </div>
+
+      <!-- VS divider -->
+      <div class="ls-vs">vs</div>
+
+      <!-- Player 2 -->
+      <div class="ls-player" [class.ls-player--leading]="getLeadingPlayer() === 'player2'">
+        <div class="ls-player-avatar">{{ (match()!.player2_username ?? 'P2')[0].toUpperCase() }}</div>
+        <h2 class="ls-player-name">{{ match()!.player2_username ?? 'Player 2' }}</h2>
+        <div class="ls-score" [class.ls-score--winning]="getLeadingPlayer() === 'player2'">
+          {{ match()!.player2_games_won ?? 0 }}
+        </div>
+        <p class="ls-score-label">{{ getScoreLabel() }}</p>
+        <button
+          class="ls-btn ls-btn--point"
+          (click)="addPoint('player2')"
+          [disabled]="submitting() || match()!.status !== 'IN_PROGRESS'">
+          + Point
+        </button>
+      </div>
+
+    </div>
+
+    @if (error()) {
+      <div class="ls-error">
+        <span>⚠</span> {{ error() }}
+      </div>
+    }
+
+    <!-- Footer actions -->
+    <div class="ls-footer">
+      <a routerLink="/dashboard" class="ls-btn ls-btn--secondary">Back</a>
+      <button
+        class="ls-btn ls-btn--complete"
+        (click)="completeMatch()"
+        [disabled]="submitting() || !canComplete()">
+        @if (submitting()) {
+          <span class="ls-spinner ls-spinner--sm"></span> Completing…
+        } @else {
+          Complete Match
+        }
+      </button>
+    </div>
+
+  }
+
+</div>

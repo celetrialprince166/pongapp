@@ -1,0 +1,146 @@
+<div class="step-content">
+  <div class="step-header">
+    <h1 class="step-title">Rules & Rewards</h1>
+    <p class="step-subtitle">Step 3 of 5: Define scoring rules and prize distribution.</p>
+  </div>
+
+  <div class="form-fields">
+    <!-- Rating Type -->
+    <div class="form-group">
+      <label class="form-label">Rating Type</label>
+      <div class="rating-toggle">
+        <button
+          type="button"
+          class="rating-btn"
+          [class.active]="data().isRated"
+          (click)="toggleRating(true)">
+          <span class="material-symbols-outlined rating-icon">verified</span>
+          <div>
+            <p class="rating-title">Official Rated Match</p>
+            <p class="rating-description">Affects player ELO and official rankings</p>
+          </div>
+        </button>
+        <button
+          type="button"
+          class="rating-btn"
+          [class.active]="!data().isRated"
+          (click)="toggleRating(false)">
+          <span class="material-symbols-outlined rating-icon">sports</span>
+          <div>
+            <p class="rating-title">Practice / Casual</p>
+            <p class="rating-description">Fun event, no impact on rankings</p>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Points & Awards -->
+    <div class="form-group">
+      <label class="form-label">Points & Awards</label>
+
+      <!-- 1st Place -->
+      <div class="prize-row">
+        <div class="place-badge first">
+          <span class="material-symbols-outlined">workspace_premium</span>
+          <span>1st Place</span>
+        </div>
+        <div class="prize-inputs">
+          <div class="points-input-wrapper">
+            <input
+              type="number"
+              class="form-input points-input"
+              placeholder="Points"
+              min="0"
+              [ngModel]="data().prizes.first.points"
+              (ngModelChange)="updatePrize('first', 'points', $event)">
+            <span class="input-suffix">pts</span>
+          </div>
+          <input
+            type="text"
+            class="form-input prize-input"
+            placeholder="Trophy, Medal, Prize..."
+            [ngModel]="data().prizes.first.prize"
+            (ngModelChange)="updatePrize('first', 'prize', $event)">
+        </div>
+      </div>
+
+      <!-- 2nd Place -->
+      <div class="prize-row">
+        <div class="place-badge second">
+          <span class="material-symbols-outlined">military_tech</span>
+          <span>2nd Place</span>
+        </div>
+        <div class="prize-inputs">
+          <div class="points-input-wrapper">
+            <input
+              type="number"
+              class="form-input points-input"
+              placeholder="Points"
+              min="0"
+              [ngModel]="data().prizes.second.points"
+              (ngModelChange)="updatePrize('second', 'points', $event)">
+            <span class="input-suffix">pts</span>
+          </div>
+          <input
+            type="text"
+            class="form-input prize-input"
+            placeholder="Medal, Prize..."
+            [ngModel]="data().prizes.second.prize"
+            (ngModelChange)="updatePrize('second', 'prize', $event)">
+        </div>
+      </div>
+
+      <!-- 3rd Place -->
+      <div class="prize-row">
+        <div class="place-badge third">
+          <span class="material-symbols-outlined">emoji_events</span>
+          <span>3rd Place</span>
+        </div>
+        <div class="prize-inputs">
+          <div class="points-input-wrapper">
+            <input
+              type="number"
+              class="form-input points-input"
+              placeholder="Points"
+              min="0"
+              [ngModel]="data().prizes.third.points"
+              (ngModelChange)="updatePrize('third', 'points', $event)">
+            <span class="input-suffix">pts</span>
+          </div>
+          <input
+            type="text"
+            class="form-input prize-input"
+            placeholder="Voucher, Prize..."
+            [ngModel]="data().prizes.third.prize"
+            (ngModelChange)="updatePrize('third', 'prize', $event)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Special Rules -->
+    <div class="form-group">
+      <label class="form-label">Special Rules (Optional)</label>
+      <textarea
+        class="form-textarea"
+        rows="4"
+        placeholder="Add any special rules, equipment requirements, or tournament-specific regulations..."
+        maxlength="1000"
+        [ngModel]="data().specialRules"
+        (ngModelChange)="updateField('specialRules', $event)"></textarea>
+      <div class="character-counter">
+        <span [class.limit-near]="getCharacterCount() > 900">
+          {{ getCharacterCount() }} / 1000
+        </span>
+      </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <span class="material-symbols-outlined banner-icon">info</span>
+      <div>
+        <p class="banner-title">Prize Guidelines</p>
+        <p class="banner-text">Be specific about prizes and ensure they're achievable. Points are used for season-long leaderboards if applicable.</p>
+      </div>
+    </div>
+  </div>
+</div>

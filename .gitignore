@@ -1,0 +1,66 @@
+# ---- secrets / env ----
+.env
+.env.*
+!.env.example
+*.tfvars
+!*.tfvars.example
+*.pem
+*.key
+
+# ---- terraform ----
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+.terraform.lock.hcl
+
+# ---- node / angular ----
+node_modules/
+dist/
+.angular/
+*.log
+
+# ---- python / django ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+db.sqlite3
+**/staticfiles/
+**/media/
+
+# ---- testing artifacts ----
+apps/frontend/cypress/videos/
+apps/frontend/cypress/screenshots/
+test-output.txt
+apps/**/test-output.txt
+
+# ---- carried-in cruft from the original sub-repos ----
+apps/**/.bmad-core/
+apps/**/web-bundles/
+apps/**/.claude/
+apps/**/backend_methods*.txt
+apps/**/backend_methods*.md
+# old team planning docs (PRDs, stories, jira, session notes) — not part of this project;
+# one contained a leaked Atlassian token. Our docs live in the root docs/ folder.
+apps/**/docs/
+
+# ---- kubernetes secrets (commit only the .example templates) ----
+k8s/secrets/*.yaml
+!k8s/secrets/*.example.yaml
+
+# ---- unrelated project carried in the workspace ----
+course/
+
+# ---- claude local settings (never commit) ----
+**/.claude/settings.local.json
+k8s/**/.claude/
+
+# ---- editor / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- docs build assets (keep source pngs in docs/, ignore scratch) ----
+docs/**/*.tmp

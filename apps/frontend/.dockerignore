@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.angular/
+coverage/
+.git/
+.gitignore
+.vscode/
+.idea/
+.claude/
+cypress/
+test-output.txt
+test-frontend-forms.sh
+*.spec.ts
+proxy.conf.json

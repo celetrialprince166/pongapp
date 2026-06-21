@@ -1,0 +1,159 @@
+<div class="step-content">
+  <div class="step-header">
+    <h1 class="step-title">Review & Publish</h1>
+    <p class="step-subtitle">Step 4 of 4: Review all details before publishing your tournament.</p>
+  </div>
+
+  <div class="review-sections">
+    <!-- Info Banner -->
+    <div class="info-banner warning">
+      <span class="material-symbols-outlined banner-icon">info</span>
+      <div>
+        <h4 class="banner-title">Review Required</h4>
+        <p class="banner-text">Please review all tournament details carefully. Once published, certain fields like format and scoring may be locked.</p>
+      </div>
+    </div>
+
+    <!-- Basic Information Section -->
+    <section class="review-section">
+      <div class="section-header">
+        <h2 class="section-title">Basic Information</h2>
+        <button class="edit-btn" (click)="onEditClick(1)">
+          <span class="material-symbols-outlined">edit</span>
+          Edit
+        </button>
+      </div>
+      <div class="section-content">
+        <div class="info-row">
+          <span class="info-label">Tournament Name</span>
+          <span class="info-value">{{ data().basicInfo.name || 'Not set' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Season</span>
+          <span class="info-value">{{ data().basicInfo.season }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Location</span>
+          <span class="info-value">{{ data().basicInfo.location || 'Not set' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Format</span>
+          <span class="info-value">{{ getFormatLabel(data().basicInfo.format) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Max Participants</span>
+          <span class="info-value">{{ data().basicInfo.maxParticipants }} players</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Registration Section -->
+    <section class="review-section">
+      <div class="section-header">
+        <h2 class="section-title">Registration</h2>
+        <button class="edit-btn" (click)="onEditClick(2)">
+          <span class="material-symbols-outlined">edit</span>
+          Edit
+        </button>
+      </div>
+      <div class="section-content">
+        <div class="info-row">
+          <span class="info-label">Mode</span>
+          <span class="badge"
+                [class.badge-auto]="data().registration.mode === 'AUTOMATIC'"
+                [class.badge-manual]="data().registration.mode === 'MANUAL'">
+            {{ getModeLabel(data().registration.mode) }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Registration Deadline</span>
+          <span class="info-value">{{ formatDate(data().registration.deadline) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Entry Fee</span>
+          <span class="info-value">
+            @if (data().registration.isFree) {
+              Free
+            } @else {
+              ${{ data().registration.entryFee || 0 }}
+            }
+          </span>
+        </div>
+        @if (data().registration.notes) {
+          <div class="info-row full">
+            <span class="info-label">Additional Notes</span>
+            <p class="info-text">{{ data().registration.notes }}</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Rules & Rewards Section -->
+    <section class="review-section">
+      <div class="section-header">
+        <h2 class="section-title">Rules & Rewards</h2>
+        <button class="edit-btn" (click)="onEditClick(3)">
+          <span class="material-symbols-outlined">edit</span>
+          Edit
+        </button>
+      </div>
+      <div class="section-content">
+        <div class="info-row">
+          <span class="info-label">Rating Type</span>
+          <span class="badge"
+                [class.badge-rated]="data().rulesRewards.isRated"
+                [class.badge-casual]="!data().rulesRewards.isRated">
+            {{ getRatingLabel(data().rulesRewards.isRated) }}
+          </span>
+        </div>
+        <div class="prizes-section">
+          <p class="info-label">Points & Awards</p>
+          <div class="prize-list">
+            <div class="prize-item">
+              <span class="prize-place gold">🥇 1st Place</span>
+              <span class="prize-details">
+                {{ data().rulesRewards.prizes.first.points }} pts
+                @if (data().rulesRewards.prizes.first.prize) {
+                  + {{ data().rulesRewards.prizes.first.prize }}
+                }
+              </span>
+            </div>
+            <div class="prize-item">
+              <span class="prize-place silver">🥈 2nd Place</span>
+              <span class="prize-details">
+                {{ data().rulesRewards.prizes.second.points }} pts
+                @if (data().rulesRewards.prizes.second.prize) {
+                  + {{ data().rulesRewards.prizes.second.prize }}
+                }
+              </span>
+            </div>
+            <div class="prize-item">
+              <span class="prize-place bronze">🥉 3rd Place</span>
+              <span class="prize-details">
+                {{ data().rulesRewards.prizes.third.points }} pts
+                @if (data().rulesRewards.prizes.third.prize) {
+                  + {{ data().rulesRewards.prizes.third.prize }}
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+        @if (data().rulesRewards.specialRules) {
+          <div class="info-row full">
+            <span class="info-label">Special Rules</span>
+            <p class="info-text">{{ data().rulesRewards.specialRules }}</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Publication Notice Banner -->
+    <div class="info-banner notice">
+      <span class="material-symbols-outlined banner-icon">info</span>
+      <div>
+        <h4 class="banner-title">Publication Notice</h4>
+        <p class="banner-text">By publishing, this tournament will become publicly visible on the platform and open for registrations according to your settings. You can still save it as a draft if you're not ready yet.</p>
+      </div>
+    </div>
+  </div>
+</div>

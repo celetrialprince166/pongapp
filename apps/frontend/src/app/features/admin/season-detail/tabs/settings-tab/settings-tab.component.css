@@ -1,0 +1,180 @@
+.settings-tab {
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Section card ───────────────────────────── */
+.settings-section {
+  background: #ffffff;
+  border: 1px solid var(--admin-border-primary, #e2e8f0);
+  border-radius: 0.75rem;
+  padding: 1.375rem 1.5rem;
+}
+
+.settings-section-danger {
+  border-color: #fed7aa;
+  background: #fffbf7;
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+
+.section-icon-wrap {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.125rem;
+}
+
+.section-icon-wrap svg { stroke: var(--admin-primary-500, #0EA5E9); }
+
+.section-icon-warn { background: #fff7ed; }
+.section-icon-warn svg { stroke: #ea580c; }
+
+.section-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--admin-text-primary, #101922);
+  margin: 0 0 0.25rem;
+}
+
+.section-desc {
+  font-size: 0.8125rem;
+  color: var(--admin-text-tertiary, #64748b);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── ELO info grid ──────────────────────────── */
+.elo-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.elo-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid var(--admin-border-primary, #e2e8f0);
+  border-radius: 0.5rem;
+}
+
+.elo-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-text-tertiary, #64748b);
+}
+
+.elo-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--admin-text-primary, #101922);
+}
+
+.elo-note {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--admin-text-tertiary, #64748b);
+}
+
+/* ── Formula block ──────────────────────────── */
+.elo-formula {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  background: #f8fafc;
+  border: 1px solid var(--admin-border-primary, #e2e8f0);
+  border-radius: 0.5rem;
+}
+
+.formula-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--admin-text-tertiary, #64748b);
+}
+
+.formula-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--admin-primary-600, #0284c7);
+  background: none;
+  padding: 0;
+}
+
+.formula-hint {
+  font-size: 0.75rem;
+  color: var(--admin-text-tertiary, #64748b);
+}
+
+/* ── Actions ────────────────────────────────── */
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outlined-danger {
+  background: transparent;
+  border: 1px solid #f87171;
+  color: #b91c1c;
+}
+
+.btn-outlined-danger:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.btn-spinner-danger {
+  border-color: rgba(185, 28, 28, 0.25);
+  border-top-color: #b91c1c;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

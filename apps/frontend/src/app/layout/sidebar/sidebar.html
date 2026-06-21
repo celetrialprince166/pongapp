@@ -1,0 +1,59 @@
+<div class="full-sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-icon-box">
+      <lucide-icon [img]="titleIcon" [size]="20" class="logo-icon-inner"></lucide-icon>
+    </div>
+    <span class="sidebar-brand">PingMaster</span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav" aria-label="Main navigation">
+    <ul class="sidebar-list">
+      @for(item of menuItems(); track $index) {
+        <li class="sidebar-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: $any(item).exact !== false }">
+          <a class="sidebar-link" [routerLink]="item.link">
+            <lucide-icon [img]="item.icon" [size]="20" class="nav-icon"></lucide-icon>
+            <span class="sidebar-label">{{ item.name }}</span>
+          </a>
+        </li>
+      }
+
+      <!-- Support Section -->
+      <li class="nav-section-label">Support</li>
+      @for(item of supportItems; track $index) {
+        <li class="sidebar-item" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <a class="sidebar-link" [routerLink]="item.link">
+            <lucide-icon [img]="item.icon" [size]="20" class="nav-icon"></lucide-icon>
+            <span class="sidebar-label">{{ item.name }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <!-- Bottom: User Card + Logout -->
+  <div class="sidebar-bottom">
+    @if (currentUser()) {
+      <div class="user-card">
+        <div class="user-avatar">
+          @if (currentUser()!.avatar) {
+            <img [src]="currentUser()!.avatar" [alt]="currentUser()!.username" class="avatar-image">
+          } @else {
+            <div class="avatar-placeholder">{{ getUserInitials() }}</div>
+          }
+        </div>
+        <div class="user-info">
+          <p class="user-name">{{ currentUser()!.first_name }} {{ currentUser()!.last_name }}</p>
+          <p class="user-role">{{ getRoleLabel(currentUser()!.role) }}</p>
+        </div>
+      </div>
+    }
+    <button class="logout-btn" (click)="logout()">
+      <lucide-icon [img]="logoutIcon" [size]="20" class="logout-icon"></lucide-icon>
+      <span>Logout</span>
+    </button>
+  </div>
+
+</div>

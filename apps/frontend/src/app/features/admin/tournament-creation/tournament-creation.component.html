@@ -1,0 +1,258 @@
+<div class="tournament-creation">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">Create New Tournament</h1>
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="error-banner">
+      <span class="error-message">{{ error() }}</span>
+      <button class="btn-close" (click)="clearError()">×</button>
+    </div>
+  }
+
+  <!-- Tournament Form -->
+  <form class="tournament-form" (submit)="$event.preventDefault(); onCreateTournament()">
+
+    <!-- Section 1: Basic Information -->
+    <div class="form-section">
+      <h2 class="section-title">Basic Information</h2>
+
+      <div class="form-group">
+        <label class="form-label">Tournament Name *</label>
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="tournamentForm().name"
+          name="name"
+          [class.error]="formErrors()['name']"
+          placeholder="e.g., Spring Championship 2026">
+        @if (formErrors()['name']) {
+          <span class="error-text">{{ formErrors()['name'] }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Location/Venue *</label>
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="tournamentForm().location"
+          name="location"
+          [class.error]="formErrors()['location']"
+          placeholder="e.g., Downtown Sports Center">
+        @if (formErrors()['location']) {
+          <span class="error-text">{{ formErrors()['location'] }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea
+          class="form-textarea"
+          [(ngModel)]="tournamentForm().description"
+          name="description"
+          rows="4"
+          placeholder="Provide details about the tournament..."></textarea>
+      </div>
+    </div>
+
+    <!-- Section 2: Tournament Dates -->
+    <div class="form-section">
+      <h2 class="section-title">Tournament Dates</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Date *</label>
+          <input
+            type="date"
+            class="form-input date-input"
+            [(ngModel)]="tournamentForm().startDate"
+            name="startDate"
+            [class.error]="formErrors()['startDate']"
+            [min]="getMinStartDate()"
+            (change)="updateRegistrationDeadline()">
+          @if (formErrors()['startDate']) {
+            <span class="error-text">{{ formErrors()['startDate'] }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">End Date *</label>
+          <input
+            type="date"
+            class="form-input date-input"
+            [(ngModel)]="tournamentForm().endDate"
+            name="endDate"
+            [class.error]="formErrors()['endDate']"
+            [min]="tournamentForm().startDate || getMinStartDate()">
+          @if (formErrors()['endDate']) {
+            <span class="error-text">{{ formErrors()['endDate'] }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Registration Deadline *</label>
+        <input
+          type="date"
+          class="form-input date-input"
+          [(ngModel)]="tournamentForm().registrationDeadline"
+          name="registrationDeadline"
+          [class.error]="formErrors()['registrationDeadline']"
+          [min]="getMinStartDate()"
+          [max]="tournamentForm().startDate">
+        @if (formErrors()['registrationDeadline']) {
+          <span class="error-text">{{ formErrors()['registrationDeadline'] }}</span>
+        }
+        <span class="form-hint">Players must register before this date</span>
+      </div>
+    </div>
+
+    <!-- Section 3: Format & Structure -->
+    <div class="form-section">
+      <h2 class="section-title">Format & Structure</h2>
+
+      <div class="form-group">
+        <label class="form-label">Tournament Format *</label>
+        <div class="button-group">
+          <button
+            type="button"
+            class="btn-group-item"
+            [class.active]="tournamentForm().format === 'SINGLE_ELIMINATION'"
+            (click)="onFormatChange('SINGLE_ELIMINATION')">
+            {{ getFormatLabel('SINGLE_ELIMINATION') }}
+          </button>
+          <button
+            type="button"
+            class="btn-group-item"
+            [class.active]="tournamentForm().format === 'DOUBLE_ELIMINATION'"
+            (click)="onFormatChange('DOUBLE_ELIMINATION')">
+            {{ getFormatLabel('DOUBLE_ELIMINATION') }}
+          </button>
+          <button
+            type="button"
+            class="btn-group-item"
+            [class.active]="tournamentForm().format === 'ROUND_ROBIN'"
+            (click)="onFormatChange('ROUND_ROBIN')">
+            {{ getFormatLabel('ROUND_ROBIN') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Participants & Seeding -->
+    <div class="form-section">
+      <h2 class="section-title">Participants & Seeding</h2>
+
+      <div class="form-group">
+        <label class="form-label">Maximum Participants *</label>
+        <input
+          type="number"
+          class="form-input"
+          [(ngModel)]="tournamentForm().maxParticipants"
+          name="maxParticipants"
+          [class.error]="formErrors()['maxParticipants']"
+          min="2"
+          max="256"
+          placeholder="32">
+        @if (formErrors()['maxParticipants']) {
+          <span class="error-text">{{ formErrors()['maxParticipants'] }}</span>
+        }
+        <span class="form-hint">
+          @if (tournamentForm().format === 'ROUND_ROBIN') {
+            Round Robin: Any number from 2 to 256
+          } @else {
+            Elimination formats: Must be 4, 8, 16, 32, or 64
+          }
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Seeding Method *</label>
+        <select
+          class="form-select"
+          [(ngModel)]="tournamentForm().seedingMethod"
+          name="seedingMethod">
+          <option value="elo">{{ getSeedingMethodLabel('elo') }}</option>
+          <option value="random">{{ getSeedingMethodLabel('random') }}</option>
+          <option value="manual">{{ getSeedingMethodLabel('manual') }}</option>
+        </select>
+        <span class="form-hint">
+          @if (tournamentForm().seedingMethod === 'elo') {
+            Players will be seeded based on their current ELO ratings
+          } @else if (tournamentForm().seedingMethod === 'random') {
+            Players will be randomly assigned to brackets
+          } @else {
+            You will manually assign players to bracket positions
+          }
+        </span>
+      </div>
+    </div>
+
+    <!-- Section 5: Advanced Rules & Settings -->
+    <div class="form-section">
+      <h2 class="section-title">Advanced Rules & Settings</h2>
+
+      <div class="form-group">
+        <div class="toggle-item">
+          <div class="toggle-info">
+            <label class="toggle-label">Publish to Public Page</label>
+            <span class="toggle-description">Make this tournament visible to all users</span>
+          </div>
+          <button
+            type="button"
+            class="toggle-switch"
+            [class.active]="tournamentForm().publishToPublic"
+            (click)="onPublishToggle()">
+            <span class="toggle-slider"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="toggle-item">
+          <div class="toggle-info">
+            <label class="toggle-label">Allow Late Entries</label>
+            <span class="toggle-description">Permit registrations after the deadline (admin approval required)</span>
+          </div>
+          <button
+            type="button"
+            class="toggle-switch"
+            [class.active]="tournamentForm().allowLateEntries"
+            (click)="onLateEntriesToggle()">
+            <span class="toggle-slider"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="onCancel()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="btn-outline"
+        (click)="onSaveAsDraft()">
+        Save as Draft
+      </button>
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner-small"></span>
+          Creating...
+        } @else {
+          Create Tournament
+        }
+      </button>
+    </div>
+  </form>
+</div>

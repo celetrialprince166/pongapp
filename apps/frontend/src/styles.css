@@ -1,0 +1,308 @@
+/* --- Design System (Stitch: Lexend / #38e07b / Full Roundness) --- */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Material Symbols Outlined — required base rule for FILL/wght variation axes */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+:root {
+	/* ========================================
+	   CORE DESIGN TOKENS (Stitch-aligned)
+	   ======================================== */
+
+	/* --- Brand Colors --- */
+	--color-primary: #3B82F6;
+	/* Blue — primary actions */
+	--color-primary-hover: #2563EB;
+	--color-accent: #38e07b;
+	/* Green accent from Stitch */
+	--color-accent-hover: #2bc66a;
+	--color-secondary: #FFD700;
+	/* Gold — awards, highlights */
+	--color-tertiary: #90EE90;
+
+	/* --- Semantic Colors --- */
+	--color-green: #10B981;
+	--color-red: #EF4444;
+	--color-blue: #0EA5E9;
+	--color-warning: #F59E0B;
+	--color-warning-light: #FBBF24;
+
+	/* --- Background Colors (Light Theme) --- */
+	--bg: #f6f7f8;
+	--bg-hover: #F1F5F9;
+	--bg-active: rgba(59, 130, 246, 0.1);
+	--card: #ffffff;
+	--card-bg: #FFFFFF;
+	--card-bg-secondary: #F8F9FA;
+	--card-border: #E5E7EB;
+	--card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+	--card-shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+	/* --- Text Colors --- */
+	--text: #101922;
+	--text-muted: #666666;
+	--text-primary: #0F172A;
+	--text-secondary: #475569;
+
+	/* --- Border Colors --- */
+	--border: #e7edf3;
+
+	/* ========================================
+	   ADMIN DESIGN SYSTEM TOKENS
+	   ======================================== */
+
+	/* --- Stitch Design Tokens (pixel-perfect from Stitch MCP) --- */
+	/* Primary color extracted from Stitch Tailwind config */
+	--stitch-primary: #2b8cee;
+	--stitch-primary-10: rgba(43, 140, 238, 0.10);
+	/* Stitch custom border-radius scale (overrides standard Tailwind) */
+	--stitch-radius-xs:   0.125rem;  /* rounded (DEFAULT) = 2px  */
+	--stitch-radius-sm:   0.25rem;   /* rounded-lg        = 4px  */
+	--stitch-radius-md:   0.5rem;    /* rounded-xl        = 8px  */
+	--stitch-radius-pill: 0.75rem;   /* rounded-full      = 12px */
+
+	/* --- Primary Colors (Stitch Blue — matched to Stitch MCP) --- */
+	--admin-primary-50: #EFF6FF;
+	--admin-primary-100: #DBEAFE;
+	--admin-primary-200: #BFDBFE;
+	--admin-primary-300: #93C5FD;
+	--admin-primary-400: #60A5FA;
+	--admin-primary-500: #2b8cee;
+	--admin-primary-600: #1d6fc7;
+	--admin-primary-700: #1558a3;
+	--admin-primary-800: #104482;
+	--admin-primary-900: #0c3463;
+
+	/* --- Success Colors (Green) --- */
+	--admin-success-50: #F0FDF4;
+	--admin-success-100: #DCFCE7;
+	--admin-success-200: #BBF7D0;
+	--admin-success-300: #86EFAC;
+	--admin-success-400: #4ADE80;
+	--admin-success-500: #22C55E;
+	--admin-success-600: #16A34A;
+	--admin-success-700: #15803D;
+	--admin-success-800: #166534;
+	--admin-success-900: #14532D;
+
+	/* --- Warning Colors (Amber) --- */
+	--admin-warning-50: #FFFBEB;
+	--admin-warning-100: #FEF3C7;
+	--admin-warning-200: #FDE68A;
+	--admin-warning-300: #FCD34D;
+	--admin-warning-400: #FBBF24;
+	--admin-warning-500: #F59E0B;
+	--admin-warning-600: #D97706;
+	--admin-warning-700: #B45309;
+	--admin-warning-800: #92400E;
+	--admin-warning-900: #78350F;
+
+	/* --- Danger Colors (Red) --- */
+	--admin-danger-50: #FEF2F2;
+	--admin-danger-100: #FEE2E2;
+	--admin-danger-200: #FECACA;
+	--admin-danger-300: #FCA5A5;
+	--admin-danger-400: #F87171;
+	--admin-danger-500: #EF4444;
+	--admin-danger-600: #DC2626;
+	--admin-danger-700: #B91C1C;
+	--admin-danger-800: #991B1B;
+	--admin-danger-900: #7F1D1D;
+
+	/* --- Admin Backgrounds (Light Theme) --- */
+	--admin-bg-primary: #F8FAFC;
+	--admin-bg-secondary: #FFFFFF;
+	--admin-bg-tertiary: #F1F5F9;
+	--admin-bg-hover: #E2E8F0;
+	--admin-bg-active: #CBD5E1;
+
+	/* --- Admin Text --- */
+	--admin-text-primary: #0F172A;
+	--admin-text-secondary: #1E293B;
+	--admin-text-tertiary: #475569;
+	--admin-text-disabled: #94A3B8;
+	--admin-text-inverse: #FFFFFF;
+
+	/* --- Admin Borders --- */
+	--admin-border-primary: #E2E8F0;
+	--admin-border-secondary: #CBD5E1;
+	--admin-border-focus: #0EA5E9;
+	--admin-border-error: #EF4444;
+
+	/* ========================================
+	   SPACING, TYPOGRAPHY, RADII
+	   ======================================== */
+
+	/* --- Spacing Scale (8px base) --- */
+	--spacing-1: 0.25rem;
+	--spacing-2: 0.5rem;
+	--spacing-3: 0.75rem;
+	--spacing-4: 1rem;
+	--spacing-5: 1.25rem;
+	--spacing-6: 1.5rem;
+	--spacing-8: 2rem;
+	--spacing-10: 2.5rem;
+	--spacing-12: 3rem;
+	--spacing-16: 4rem;
+	--spacing-20: 5rem;
+
+	/* --- Typography --- */
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.875rem;
+	--font-size-base: 1rem;
+	--font-size-lg: 1.125rem;
+	--font-size-xl: 1.25rem;
+	--font-size-2xl: 1.5rem;
+	--font-size-3xl: 1.875rem;
+	--font-size-4xl: 2.25rem;
+	--font-size-5xl: 3rem;
+
+	--font-weight-normal: 400;
+	--font-weight-medium: 500;
+	--font-weight-semibold: 600;
+	--font-weight-bold: 700;
+
+	--line-height-tight: 1.25;
+	--line-height-normal: 1.5;
+	--line-height-relaxed: 1.75;
+
+	/* --- Border Radius (Full Roundness — Stitch) --- */
+	--radius-sm: 0.375rem;
+	--radius-base: 0.5rem;
+	--radius-default: 0.5rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1rem;
+	--radius-xl: 1.25rem;
+	--radius-2xl: 1.5rem;
+	--radius-full: 9999px;
+
+	/* --- Shadows --- */
+	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+	--shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+	/* --- Transitions --- */
+	--transition-fast: 100ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* --- Z-Index Scale --- */
+	--z-dropdown: 1000;
+	--z-sticky: 1020;
+	--z-fixed: 1030;
+	--z-modal-backdrop: 1040;
+	--z-modal: 1050;
+	--z-popover: 1060;
+	--z-tooltip: 1070;
+
+	/* --- Font Families --- */
+	--font-display: 'Lexend', 'Inter', sans-serif;
+	--font-body: 'Lexend', 'Inter', sans-serif;
+
+	/* ========================================
+	   BACKWARD-COMPATIBLE ALIASES
+	   Used by existing component CSS files
+	   ======================================== */
+	--color-background: #f8fafc;
+	--color-background-secondary: #ffffff;
+	--color-text-primary: #0f172a;
+	--color-text-secondary: #475569;
+	--color-text-disabled: #94a3b8;
+	--color-border: #e2e8f0;
+	--color-danger: #ef4444;
+	--color-success: #22c55e;
+	--primary: #3B82F6;
+	--bg-secondary: #f1f5f9;
+	--border-color: #e2e8f0;
+}
+
+/* Global base settings */
+html,
+body {
+	height: 100%;
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--font-body);
+	margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-display);
+	margin: 0;
+}
+
+/* Utility-like classes */
+.card {
+	background: var(--card);
+	border-radius: var(--radius-xl);
+	padding: 1.5rem;
+	border: 1px solid var(--border);
+	box-shadow: var(--card-shadow);
+	transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+	box-shadow: var(--card-shadow-hover);
+}
+
+.btn-primary {
+	background: var(--color-primary);
+	color: #fff;
+	padding: 0.75rem 1.5rem;
+	border-radius: var(--radius-default);
+	border: none;
+	cursor: pointer;
+	font-weight: 600;
+	transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+	filter: brightness(1.1);
+}
+
+.btn-secondary {
+	background: transparent;
+	border: 1px solid var(--border);
+	color: var(--text);
+	padding: 0.75rem 1.5rem;
+	border-radius: var(--radius-default);
+	cursor: pointer;
+	font-weight: 600;
+	transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+/* small responsive helpers */
+.hidden-mobile {
+	display: none;
+}
+
+@media(min-width: 640px) {
+	.hidden-mobile {
+		display: block;
+	}
+}

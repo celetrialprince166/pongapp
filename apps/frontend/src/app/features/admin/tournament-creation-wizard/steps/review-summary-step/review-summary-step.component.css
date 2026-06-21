@@ -1,0 +1,289 @@
+/* Step Content */
+.step-content {
+  background: transparent;
+}
+
+/* Step Header */
+.step-header {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.step-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+}
+
+.step-subtitle {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 0;
+}
+
+/* Review Sections */
+.review-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Review Section */
+.review-section {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--admin-primary-500);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover {
+  background: rgba(14, 165, 233, 0.06);
+}
+
+.edit-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Section Content */
+.section-content {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Info Row */
+.info-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.info-row.full {
+  grid-template-columns: 1fr;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.info-text {
+  font-size: 0.875rem;
+  color: #64748B;
+  line-height: 1.6;
+  margin: 0.5rem 0 0;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-auto {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-manual {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badge-rated {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-casual {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+/* Prizes Section */
+.prizes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.prize-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.prize-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #F8FAFC;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+}
+
+.prize-place {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.prize-place.gold {
+  color: #CA8A04;
+}
+
+.prize-place.silver {
+  color: #64748B;
+}
+
+.prize-place.bronze {
+  color: #CD7F32;
+}
+
+.prize-details {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+/* Info Banner */
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+}
+
+.info-banner.warning {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+}
+
+.info-banner.notice {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+}
+
+.banner-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.info-banner.warning .banner-icon {
+  color: #F59E0B;
+}
+
+.info-banner.notice .banner-icon {
+  color: var(--admin-primary-500);
+}
+
+.banner-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.info-banner.warning .banner-title {
+  color: #92400E;
+}
+
+.info-banner.notice .banner-title {
+  color: var(--admin-primary-500);
+}
+
+.banner-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.info-banner.warning .banner-text {
+  color: #78350F;
+}
+
+.info-banner.notice .banner-text {
+  color: #1E40AF;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .step-header {
+    padding: 1.5rem;
+  }
+
+  .section-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .section-content {
+    padding: 1rem 1.5rem;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .prize-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

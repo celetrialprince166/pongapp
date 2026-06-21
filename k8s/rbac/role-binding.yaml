@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: table-tennis-rolebinding
+  namespace: table-tennis
+subjects:
+  - kind: ServiceAccount
+    name: table-tennis-sa
+    namespace: table-tennis
+roleRef:
+  kind: Role
+  name: table-tennis-role
+  apiGroup: rbac.authorization.k8s.io

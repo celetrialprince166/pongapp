@@ -1,0 +1,100 @@
+:host {
+    display: block;
+}
+
+.season-progress-card {
+    background: var(--card);
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); */
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.card-title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.progress-header .value {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.progress-bar-container {
+    height: 6px;
+    background-color: var(--border);
+    /* Or a darker shade for track */
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-bar.primary {
+    background-color: var(--color-primary);
+}
+
+.divider {
+    height: 1px;
+    background-color: var(--border);
+    width: 100%;
+    margin: 0.5rem 0;
+}
+
+.stats-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 0.5rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    font-family: var(--font-display);
+    line-height: 1;
+}
+
+.stat-value.green {
+    color: var(--color-primary);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
