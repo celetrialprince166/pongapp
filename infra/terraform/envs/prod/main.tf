@@ -98,8 +98,8 @@ module "backend" {
     USE_POSTGRES                = "True"
     DJANGO_DEBUG                = "False"
     DJANGO_ALLOWED_HOSTS        = "*"
-    DJANGO_CSRF_TRUSTED_ORIGINS = var.app_url
-    CORS_ALLOWED_ORIGINS        = var.app_url
+    DJANGO_CSRF_TRUSTED_ORIGINS = "http://${module.alb.alb_dns_name}"
+    CORS_ALLOWED_ORIGINS        = "http://${module.alb.alb_dns_name}"
     REDIS_HOST                  = module.elasticache.primary_endpoint_address
     REDIS_PORT                  = tostring(module.elasticache.port)
     POSTGRES_HOST               = module.rds.address
@@ -139,8 +139,9 @@ module "frontend" {
   security_group_id = module.network.frontend_sg_id
 
   environment = {
-    BACKEND_HOST = "backend.${module.cloudmap.namespace_name}"
-    BACKEND_PORT = "8000"
+    BACKEND_HOST     = "backend.${module.cloudmap.namespace_name}"
+    BACKEND_PORT     = "8000"
+    BACKEND_RESOLVER = "169.254.169.253" # Amazon-provided VPC DNS (re-resolves Cloud Map)
   }
 
   health_check_command = ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/ || exit 1"]

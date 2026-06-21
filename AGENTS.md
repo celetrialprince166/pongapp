@@ -110,7 +110,7 @@ checks → `docs-scribe` documents → commit.**
 
 - **New benchmark work lives under** `benchmark/` to keep it separate from the
   app code and the existing `k8s/` set:
-  - `benchmark/terraform/` — modules + `envs/` roots, S3+DynamoDB remote state
+  - `infra/terraform/` — modules + `envs/` roots, S3 remote state (native lockfile, no DynamoDB)
   - `benchmark/ecs/` — task definitions, Cloud Map, ECS-specific assets
   - `benchmark/eks/` — EKS-tuned manifests / kustomize overlays (reuse `k8s/`)
   - `benchmark/docs/` — tutorials, the benchmark report, walkthrough script

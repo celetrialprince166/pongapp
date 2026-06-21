@@ -154,6 +154,13 @@ resource "aws_service_discovery_service" "this" {
   health_check_custom_config {}
 
   tags = { Name = "${local.full_name}-discovery" }
+
+  # The empty custom-health block is immutable and the provider cannot read it
+  # back cleanly, so every plan would otherwise force a replace (which fails
+  # while ECS tasks are registered). Ignore it once created.
+  lifecycle {
+    ignore_changes = [health_check_custom_config]
+  }
 }
 
 # ---- ECS service ----

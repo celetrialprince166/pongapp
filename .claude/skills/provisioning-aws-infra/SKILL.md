@@ -1,6 +1,6 @@
 ---
 name: provisioning-aws-infra
-description: Provisions shared AWS infrastructure for the pongapp benchmark with Terraform — VPC, public/private subnets, NAT, security groups, ECR, plus the ECS cluster and the EKS cluster. Use when writing or editing any .tf file, setting up remote state, designing the network, or standing up either cluster. Enforces a modular layout, remote S3+DynamoDB state, least-privilege IAM, and a clean teardown path.
+description: Provisions shared AWS infrastructure for the pongapp benchmark with Terraform — VPC, public/private subnets, NAT, security groups, ECR, plus the ECS cluster and the EKS cluster. Use when writing or editing any .tf file, setting up remote state, designing the network, or standing up either cluster. Enforces a modular layout, remote S3 state with native lockfile locking (no DynamoDB), least-privilege IAM, and a clean teardown path.
 ---
 
 # Provisioning AWS infra (Terraform)
@@ -20,8 +20,10 @@ benchmark/terraform/
 ```
 
 ## Principles
-- **Remote state first.** S3 bucket (versioned) + DynamoDB lock table. Configure
-  `backend.tf` before applying anything else.
+- **Remote state first.** S3 bucket (versioned, encrypted) with **native S3 state
+  locking** (`use_lockfile = true`). Do NOT use a DynamoDB lock table — DynamoDB
+  locking is deprecated (Terraform ≥ 1.10 writes a `<key>.tflock` object in S3).
+  Configure `backend.tf` before applying anything else.
 - **Reuse, don't reinvent.** Prefer `terraform-aws-modules/vpc`, `.../ecs`,
   `.../eks` over hand-rolled resources; wrap them in the local modules above.
 - **Shared network.** ECS services and EKS nodes both live in the same private
@@ -33,7 +35,8 @@ benchmark/terraform/
 
 ## Workflow
 ```
-- [ ] 1. Create S3 state bucket + DynamoDB lock table (one-time bootstrap).
+- [ ] 1. Create S3 state bucket (versioned, encrypted) for one-time bootstrap;
+        enable native locking with `use_lockfile = true` (no DynamoDB).
 - [ ] 2. Write modules/network; `terraform plan` and review subnet CIDRs.
 - [ ] 3. Add modules/ecr; outputs feed containerizing-services.
 - [ ] 4. Add modules/ecs-cluster (cluster + Cloud Map namespace).

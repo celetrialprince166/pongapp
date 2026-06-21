@@ -6,6 +6,16 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Re-resolve the backend hostname at runtime instead of caching the IP at
+    # startup. Required for service discovery (Cloud Map / Kubernetes DNS): when a
+    # backend task/pod is replaced it gets a new IP, and a static proxy_pass would
+    # keep hitting the dead one (502). Using a variable upstream + resolver forces
+    # nginx to re-resolve per the TTL below.
+    #   docker-compose -> BACKEND_HOST=backend (Docker's embedded DNS 127.0.0.11)
+    #   ECS Fargate    -> BACKEND_HOST=backend.pongapp.local (Amazon VPC DNS)
+    resolver ${BACKEND_RESOLVER} valid=10s ipv6=off;
+    set $backend_upstream ${BACKEND_HOST}:${BACKEND_PORT};
+
     # Enable gzip compression
     gzip on;
     gzip_vary on;
@@ -19,18 +29,14 @@ server {
     add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options "nosniff";
 
-    # Backend upstream is resolved from env at container start (envsubst):
-    #   local docker-compose -> BACKEND_HOST=backend
-    #   ECS Fargate          -> BACKEND_HOST=backend.pongapp.local (Cloud Map)
-
     # Serve Angular app
     location / {
         try_files $uri $uri/ /index.html;
     }
 
-    # Proxy API requests to backend
+    # Proxy API requests to backend (variable upstream -> runtime resolution)
     location /api/ {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT}/api/;
+        proxy_pass http://$backend_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -39,7 +45,7 @@ server {
 
     # Proxy WebSocket requests to backend
     location /ws/ {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT}/ws/;
+        proxy_pass http://$backend_upstream;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -50,21 +56,24 @@ server {
 
     # Proxy media files (user avatars, etc.) to backend
     location /media/ {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT}/media/;
+        proxy_pass http://$backend_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
 
     # Proxy static files not handled by Angular to backend (useful for admin styles)
     location /static/ {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT}/static/;
+        proxy_pass http://$backend_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    # Proxy Django Admin — use a different path to avoid collision with Angular's /admin/
+    # Proxy Django Admin — rewrite /djadmin/ -> /admin/ to avoid colliding with
+    # Angular's own /admin/ route (variable upstream needs the rewrite, not a
+    # proxy_pass URI part).
     location /djadmin/ {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT}/admin/;
+        rewrite ^/djadmin/(.*)$ /admin/$1 break;
+        proxy_pass http://$backend_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

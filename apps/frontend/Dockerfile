@@ -18,6 +18,7 @@ FROM nginx:1.27-alpine AS runtime
 # Override BACKEND_HOST per environment (compose: "backend", ECS: "backend.pongapp.local").
 ENV BACKEND_HOST=backend \
     BACKEND_PORT=8000 \
+    BACKEND_RESOLVER=127.0.0.11 \
     NGINX_ENVSUBST_FILTER=^BACKEND_
 
 # Templated Nginx config: the official entrypoint renders

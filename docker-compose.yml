@@ -72,6 +72,7 @@ services:
     environment:
       - BACKEND_HOST=backend     # nginx proxy target (envsubst); ECS uses backend.pongapp.local
       - BACKEND_PORT=8000
+      - BACKEND_RESOLVER=127.0.0.11   # Docker embedded DNS; ECS uses 169.254.169.253 (VPC DNS)
     ports:
       - "80:80"
     volumes:
