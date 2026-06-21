@@ -19,7 +19,10 @@ resource "random_password" "django_secret_key" {
 resource "aws_secretsmanager_secret" "db_password" {
   name        = "${var.name_prefix}-db-password"
   description = "RDS PostgreSQL master password for ${var.name_prefix}."
-  tags        = { Name = "${var.name_prefix}-db-password" }
+  # 0 = delete immediately on destroy, so the benchmark can be torn down and
+  # rebuilt without hitting the default 30-day recovery-window name collision.
+  recovery_window_in_days = 0
+  tags                    = { Name = "${var.name_prefix}-db-password" }
 }
 
 resource "aws_secretsmanager_secret_version" "db_password" {
@@ -28,9 +31,10 @@ resource "aws_secretsmanager_secret_version" "db_password" {
 }
 
 resource "aws_secretsmanager_secret" "django_secret_key" {
-  name        = "${var.name_prefix}-django-secret-key"
-  description = "Django SECRET_KEY for ${var.name_prefix}."
-  tags        = { Name = "${var.name_prefix}-django-secret-key" }
+  name                    = "${var.name_prefix}-django-secret-key"
+  description             = "Django SECRET_KEY for ${var.name_prefix}."
+  recovery_window_in_days = 0
+  tags                    = { Name = "${var.name_prefix}-django-secret-key" }
 }
 
 resource "aws_secretsmanager_secret_version" "django_secret_key" {
