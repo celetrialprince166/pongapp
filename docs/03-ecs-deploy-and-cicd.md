@@ -191,7 +191,26 @@ aws elbv2 describe-target-health --target-group-arn <blue_tg_arn> \
   --query 'TargetHealthDescriptions[].TargetHealth.State'   # healthy
 ```
 
-<!-- TODO: add ECS console screenshot — services running + target health (add when the browser is authenticated to AWS) -->
+### Console evidence
+
+The ECS cluster — both services Active, 4 tasks running on Fargate:
+
+![ECS cluster pongapp-prod-cluster — backend + frontend services running](assets/p3-ecs-cluster-services.png)
+
+The frontend service's **Deployments** tab — note **Deployment controller type: ECS**,
+**Deployment strategy: Blue/green**, 5-minute bake, and the service revisions resolved
+against the `pongapp-prod-fe-green` target group + the production listener rule:
+
+![Frontend service — ECS-native blue/green deployment](assets/p3-ecs-frontend-bluegreen.png)
+
+The public Application Load Balancer (internet-facing, 2 AZs):
+
+![pongapp-prod-alb — internet-facing Application Load Balancer](assets/p3-alb.png)
+
+The two target groups that make blue/green possible — `pongapp-prod-fe-blue` and
+`pongapp-prod-fe-green`, both IP-type, attached to the ALB:
+
+![Blue + green target groups](assets/p3-target-groups-bluegreen.png)
 
 ## Troubleshooting
 

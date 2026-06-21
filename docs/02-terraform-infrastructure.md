@@ -223,6 +223,27 @@ The outputs in `envs/prod/outputs.tf` hand the next phase everything it needs:
 The app itself isn't live yet — that's Phase 3. Phase 2 is "done" when the
 infrastructure exists and `plan` is clean.
 
+### Console evidence
+
+The managed data tier — **RDS PostgreSQL** (`pongapp-prod-postgres`, `db.t4g.micro`,
+Available) in the private data subnets:
+
+![RDS PostgreSQL instance](assets/p2-rds-postgres.png)
+
+**ElastiCache for Redis** (`pongapp-prod-redis`, Redis 7.1, `cache.t4g.micro`):
+
+![ElastiCache Redis cluster](assets/p2-elasticache-redis.png)
+
+**AWS Cloud Map** — the `pongapp.local` private DNS namespace the backend registers
+into and the frontend resolves against (the spine of east-west service discovery):
+
+![Cloud Map pongapp.local namespace](assets/p2-cloudmap-namespace.png)
+
+**Amazon ECR** — the two image repositories CI pushes to (`pongapp-backend`,
+`pongapp-frontend`, scan-on-push, AES-256):
+
+![ECR repositories](assets/p2-ecr-repositories.png)
+
 ## Troubleshooting
 
 **Cloud Map service forces a perpetual replace.** The
