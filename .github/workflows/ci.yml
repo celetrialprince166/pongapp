@@ -1,0 +1,42 @@
+name: CI
+
+# Pull-request checks: lint + compile both apps. No AWS access, no image push.
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend:
+    name: Frontend (Angular build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+      - run: npm ci
+      - name: Production build
+        run: npx ng build --configuration production
+
+  backend:
+    name: Backend (lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps + flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 -r backend/requirements.txt
+      - name: Lint (fail on syntax errors / undefined names)
+        run: flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics

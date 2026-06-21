@@ -10,6 +10,15 @@ if [ -n "$POSTGRES_DB" ] && [ -n "$POSTGRES_HOST" ]; then
     echo "PostgreSQL started."
 fi
 
+# One-shot mode (used by CI before a blue/green rollout to avoid concurrent
+# migrations across multiple starting tasks): `migrate` runs migrations and exits.
+if [ "$1" = "migrate" ]; then
+    echo "Running database migrations only (one-shot)..."
+    python manage.py migrate --noinput
+    echo "Migrations complete."
+    exit 0
+fi
+
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate --noinput

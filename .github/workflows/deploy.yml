@@ -1,0 +1,72 @@
+name: Deploy (ECS blue/green)
+
+# On push to main: build & push images to ECR (keyless OIDC CI role), then
+# run migrations and deploy to ECS — frontend via ECS-native blue/green,
+# backend rolling — using the OIDC deploy role.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "deploy/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write # required for OIDC
+  contents: read
+
+env:
+  AWS_REGION: eu-west-1
+  ECR_REGISTRY: 648637468459.dkr.ecr.eu-west-1.amazonaws.com
+  ACCOUNT_ID: "648637468459"
+  CI_ROLE_ARN: arn:aws:iam::648637468459:role/pongapp-prod-gha-ci
+  DEPLOY_ROLE_ARN: arn:aws:iam::648637468459:role/pongapp-prod-gha-deploy
+
+jobs:
+  build-push:
+    name: Build & push (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (CI role, OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.CI_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/pongapp-${{ matrix.service }}:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/pongapp-${{ matrix.service }}:latest
+
+  deploy:
+    name: Migrate & deploy to ECS
+    runs-on: ubuntu-latest
+    needs: build-push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (deploy role, OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Migrate + blue/green deploy
+        run: bash deploy/ecs/deploy.sh
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
+          IMAGE_TAG: ${{ github.sha }}
