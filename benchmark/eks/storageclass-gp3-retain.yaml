@@ -1,0 +1,17 @@
+# Dedicated StorageClass for the Postgres StatefulSet.
+# reclaimPolicy: Retain so that `kubectl delete -k benchmark/eks` (teardown) does
+# NOT delete the underlying EBS volume holding the database. The volume must be
+# cleaned up manually in the console / via `aws ec2 delete-volume` at teardown
+# (see README "Teardown"). gp3 + EBS CSI, same parameters as the default class.
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3-retain
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+parameters:
+  type: gp3
+  encrypted: "true"
+  fsType: ext4

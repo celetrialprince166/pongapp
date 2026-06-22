@@ -1,0 +1,20 @@
+# Point backend liveness/readiness at the real health endpoint (/api/health/),
+# replacing the /api/schema/ probe baked into the base manifest.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: table-tennis
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          livenessProbe:
+            httpGet:
+              path: /api/health/
+              port: 8000
+          readinessProbe:
+            httpGet:
+              path: /api/health/
+              port: 8000

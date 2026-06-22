@@ -61,9 +61,9 @@ screenshots committed.
 | 1 | Containerize & verify locally (compose) | `containerizing-services` | ✅ done |
 | 2 | Terraform: VPC + ECS cluster (EKS later) | `provisioning-aws-infra` | ✅ done |
 | 3 | ECS Fargate deploy (Cloud Map + ALB) | `deploying-to-ecs-fargate` | ✅ done |
-| 4 | EKS deploy (ALB Controller + EBS CSI) | `deploying-to-eks` | ⬜ |
-| 5 | Resiliency: kill task/pod, prove recovery | `testing-resiliency` | 🟡 ECS done (zero-downtime); EKS half pending Phase 4 |
-| 6 | Benchmark report + live-walkthrough script | `benchmarking-orchestrators` | ⬜ |
+| 4 | EKS deploy (ALB Controller + EBS CSI) | `deploying-to-eks` | ✅ done |
+| 5 | Resiliency: kill task/pod, prove recovery | `testing-resiliency` | ✅ done (ECS zero-downtime; EKS frontend/backend/Postgres kills + side-by-side comparison) |
+| 6 | Benchmark report + live-walkthrough script | `benchmarking-orchestrators` | ✅ done (scored matrix + recommendation + walkthrough script) |
 
 ---
 

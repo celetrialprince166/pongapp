@@ -1,0 +1,13 @@
+# The Ingress sets a global ALB health-check path of "/", which Django answers
+# with 404 (only /api and /admin exist) -> backend target group goes unhealthy.
+# The AWS Load Balancer Controller honors health-check annotations placed on the
+# Service backing a target group, so point the backend TG at the real health
+# endpoint. The frontend keeps the Ingress default "/" (Angular index = 200).
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: table-tennis
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /api/health/
+    alb.ingress.kubernetes.io/success-codes: "200"

@@ -1,17 +1,30 @@
-# Phase 5 — Resiliency: prove the app self-heals (ECS)
+# Phase 5 — Resiliency: prove the app self-heals (ECS + EKS)
 
 ## Goal
 
 Satisfy the brief's requirement: **manually kill a running container/task and show
-the application recovers automatically.** On ECS that means killing a Fargate task
-and watching the service reconcile back to its desired count — while the app keeps
-serving traffic. (The EKS half — `kubectl delete pod` — comes after Phase 4.)
+the application recovers automatically** — and do it on **both** orchestrators so the
+benchmark can compare them fairly. On ECS that means killing a Fargate task and
+watching the service reconcile back to its desired count. On EKS it means
+`kubectl delete pod` and watching the ReplicaSet / StatefulSet controller create a
+replacement. In both cases we run a 1-second availability monitor against the live
+ALB throughout, so we measure not just *that* it recovered but whether **users**
+noticed. (EKS was unblocked by Phase 4 shipping the app to Kubernetes — see
+[04-eks-deploy.md](04-eks-deploy.md).)
 
 ## Prerequisites
 
 - The ECS stack from Phases 2–3 is deployed and healthy.
-- Backend service `pongapp-prod-backend` at desired count **2**.
-- The live ALB URL: `http://pongapp-prod-alb-734452423.eu-west-1.elb.amazonaws.com`
+- The EKS stack from Phase 4 is deployed and healthy (cluster `pongapp-prod`,
+  namespace `table-tennis`, `eu-west-1`).
+- ECS backend service `pongapp-prod-backend` at desired count **2**.
+- The live ALB URLs:
+  - ECS: `http://pongapp-prod-alb-734452423.eu-west-1.elb.amazonaws.com`
+  - EKS: `http://k8s-tableten-tableten-c826de7545-1164979244.eu-west-1.elb.amazonaws.com`
+
+---
+
+# Part A — ECS (Fargate)
 
 ## Concepts (the "why")
 
@@ -78,7 +91,7 @@ fine, and there was always ≥1 task plus the resolver), which is why it showed 
 zero-downtime churn rather than an outage.
 
 **Fix:** probe with Python's standard library, which is guaranteed present in the
-image (`infra/terraform/envs/prod/main.tf`):
+image (`infra/terraform/envs/prod-ecs/main.tf`):
 
 ```hcl
 health_check_command = ["CMD-SHELL",
@@ -89,18 +102,176 @@ After `terraform apply` + `aws ecs update-service` (task definition `:4`), backe
 tasks pass their health checks and stay running — the flapping stops. Lesson:
 **a container health check must use a tool that actually exists in that image.**
 
+---
+
+# Part B — EKS (Kubernetes)
+
+## Concepts (the "why")
+
+Kubernetes uses the **same control-loop idea as ECS, just different machinery.**
+Instead of a service scheduler chasing a *desired count*, a **controller** chases a
+declared spec:
+
+- A **Deployment** owns a **ReplicaSet**, and the ReplicaSet's whole job is "keep N
+  pods matching this template alive." Delete a pod and the ReplicaSet sees N-1 and
+  creates a replacement immediately.
+- A **StatefulSet** does the same, but with two guarantees a ReplicaSet can't make:
+  a **stable identity** (`postgres-0` comes back as `postgres-0`, not a random name)
+  and a **stable volume** (the same PersistentVolumeClaim re-attaches to the new
+  pod). That's exactly what a database needs.
+
+So the resiliency mechanism is identical in spirit to ECS — a controller reconciles
+reality toward the spec — but Kubernetes gives us a richer vocabulary (ReplicaSet
+vs StatefulSet) for *stateless* vs *stateful* workloads.
+
+The honest caveat we deliberately surface here: on EKS the **backend runs a single
+replica**. Its media/static volumes are **ReadWriteOnce EBS** PVCs, and an RWO
+volume can only attach to one node at a time, so it can't be multi-attached across a
+2-replica Deployment spread over two nodes (documented in
+[04-eks-deploy.md](04-eks-deploy.md)). That single replica is the one place we expect
+a user-visible blip — and we measure exactly how big it is rather than hiding it.
+
+## Steps
+
+Same shape as the ECS harness: start a 1-second `curl http://<eks-alb>/api/health/`
+availability monitor, then perform three kills back-to-back, timing each recovery
+with `kubectl rollout status`. The monitor ran continuously across all three kills
+(240 samples total).
+
+```bash
+NS=table-tennis
+
+# 1. Frontend pod (Deployment, replicas 2)
+kubectl delete pod frontend-6fdbdf4ccb-bs7ms -n $NS
+kubectl rollout status deploy/frontend -n $NS        # time to 2/2 Ready
+
+# 2. Backend pod (Deployment, replicas 1 — single RWO-EBS replica)
+kubectl delete pod -l app=backend -n $NS
+kubectl rollout status deploy/backend -n $NS
+
+# 3. postgres-0 (StatefulSet, replicas 1 — stateful self-heal)
+kubectl delete pod postgres-0 -n $NS
+kubectl rollout status statefulset/postgres -n $NS
+```
+
+For the Postgres kill we also proved **data survival**: write a marker row before
+the kill, then read it back after the pod returns.
+
+```bash
+# before the kill — write a marker
+kubectl exec -n $NS postgres-0 -- psql -U pongapp -c \
+  "CREATE TABLE IF NOT EXISTS resiliency_marker(id serial, note text);
+   INSERT INTO resiliency_marker(note) VALUES('written before kill');"
+
+# after postgres-0 is Ready again — read it back
+kubectl exec -n $NS postgres-0 -- psql -U pongapp -c \
+  "SELECT note FROM resiliency_marker;"   # -> 'written before kill'
+```
+
+## Verification — the result
+
+![EKS resiliency — three kills, recovery times, user impact, availability bar](assets/p5-eks-resiliency-01.png)
+
+| Killed | Controller | Replicas | Recovery | User impact | Notes |
+|--------|-----------|----------|----------|-------------|-------|
+| **frontend pod** | Deployment → ReplicaSet | 2 | **10s** | **0 downtime** | 2nd replica served throughout; ALB always had a healthy frontend target |
+| **backend pod** | Deployment → ReplicaSet | 1 | **54s** | **~3–6s blip** (3× HTTP 503) | single replica (RWO-EBS) — honest tradeoff, see below |
+| **postgres-0** | StatefulSet | 1 | **13s** | **0 downtime** | same PVC `data-postgres-0` (`pvc-434b3b22…`, gp3-retain) reattached; marker row read back intact |
+
+**Availability across all 240 one-second samples:** `237× 200`, `3× 503`, `1× 000`.
+
+- The `3× 503` all landed in the **backend kill** window: for ~3–6 seconds the ALB
+  had no healthy backend target while the old pod terminated and the new single pod
+  registered. This is the expected single-replica gap, not an orchestrator failure.
+- The `1× 000` was a **monitor warm-up timeout 43 seconds *before* any kill** — a
+  client-side connect timeout on the very first probes, not a real outage.
+
+Net: **~98.75% uptime**, with the only genuine blip isolated to the
+single-replica backend. The multi-replica frontend and the StatefulSet Postgres
+both recovered with **zero user-visible impact**, and Postgres came back with its
+identity and data intact.
+
+## Troubleshooting — the single-replica backend is the real lesson
+
+The backend's brief 503 isn't a bug to fix in this phase — it's the **data-tier HA
+limitation** showing through. Because the backend's static/media PVCs are
+ReadWriteOnce EBS, we can only run one backend pod, so killing it means zero healthy
+backend targets for a few seconds.
+
+Two ways to get true zero-downtime on the backend, both already designed into the
+app:
+
+1. **S3 for media/static** — the app has a `USE_S3` switch. With object storage the
+   backend keeps no node-local volume, so it can scale to ≥2 replicas across nodes
+   and survive a pod kill like the frontend does.
+2. **EFS (ReadWriteMany)** instead of EBS — an RWX volume *can* multi-attach across
+   nodes, again unblocking ≥2 backend replicas.
+
+We call this out explicitly because it's the same benchmark dimension as Phase 4's
+storage discussion: **EBS RWO is cheap and simple but pins you to one replica;
+S3/EFS costs a little more but buys horizontal HA.**
+
+---
+
+# Side-by-side — ECS ↔ EKS resiliency
+
+This is the comparison the Phase 6 benchmark report will build on.
+
+| Dimension | ECS (Fargate) | EKS (Kubernetes) |
+|-----------|---------------|------------------|
+| **Recovery mechanism** | Service scheduler reconciles **desired count** — launches a replacement *task* | ReplicaSet / StatefulSet controller reconciles **spec** — creates a replacement *pod* |
+| **Vocabulary** | service + task + desired count | Deployment/StatefulSet + ReplicaSet + pod |
+| **Stateless recovery** | killed backend task replaced, **0/90 failed** (zero downtime, 2 tasks) | killed frontend pod replaced in **10s**, **zero downtime** (2 replicas) |
+| **Single-replica behaviour** | n/a (ran backend at 2) | backend at 1 → **~3–6s, 3× 503** during the gap (honest blip) |
+| **Stateful tier** | **offloaded to RDS** (managed, Multi-AZ option) — not exercised by a kill | **self-hosted StatefulSet**: killed `postgres-0`, **same PVC reattached**, data verified, recovered in **13s** |
+| **What "kill" looks like** | `aws ecs stop-task` | `kubectl delete pod` |
+| **How you time recovery** | poll `describe-services` runningCount → desired | `kubectl rollout status` |
+
+**The big-picture takeaway:** the *self-healing concept is identical* — both are
+declarative control loops — so neither orchestrator "wins" on the basic recovery
+requirement. The real difference is **where the stateful tier lives**:
+
+- On **ECS** we leaned on **managed RDS**, so database resilience is AWS's problem
+  (Multi-AZ failover) and there's nothing to kill — less to operate, but a managed
+  service bill and less control.
+- On **EKS** we ran **Postgres ourselves** as a StatefulSet and *proved* it
+  self-heals with its data intact — more control and no RDS bill, but the HA story
+  (and the single-replica backend blip) is now **our** responsibility.
+
+That managed-vs-self-hosted distinction is the same axis Phase 4 raised, and it's
+the most decision-relevant input into the Phase 6 CTO recommendation.
+
 ## Cost & teardown
 
-This phase adds no new resources. The stack still bills ~$2.50–3/day while up.
-Teardown: `cd infra/terraform/envs/prod && terraform destroy`.
+This phase adds **no new resources** — it only kills and lets existing
+tasks/pods recover. But the **EKS cluster is still running** (control plane + NAT
+gateway + 2 worker nodes), and the ECS stack too, each billing ~$2.50–3/day. They
+run independently — don't leave both up.
+
+```bash
+# ECS
+terraform -chdir=infra/terraform/envs/prod-ecs destroy
+
+# EKS (helm uninstall the ALB controller first, then destroy; the Postgres EBS
+# volume is Retain'd, so delete it by hand afterwards — see chapter 04)
+terraform -chdir=infra/terraform/envs/prod-eks destroy
+```
 
 ## Key takeaways
 
-- ECS service reconciliation replaces a killed task automatically — the declarative
-  desired-count model is the resiliency mechanism.
-- With 2 tasks + Cloud Map + nginx re-resolution, task loss is **invisible to users**
-  (0/90 failed requests here).
+- **Same concept, two vocabularies.** ECS reconciles a *desired count* (replacement
+  task); EKS reconciles a *spec* via the ReplicaSet/StatefulSet controller
+  (replacement pod). Both self-heal automatically with no human in the loop.
+- **Multi-replica = invisible recovery.** ECS backend at 2 tasks → 0/90 failed
+  probes; EKS frontend at 2 replicas → 10s recovery, zero downtime.
+- **Single-replica = an honest blip.** The EKS backend (single RWO-EBS replica)
+  showed ~3–6s / 3× 503 during its kill. The fix is S3 (`USE_S3`) or EFS RWX so it
+  can run ≥2 replicas — a data-tier limitation, not an orchestrator one.
+- **Stateful self-healing works on EKS.** Killing `postgres-0` kept its identity,
+  reattached the same PVC, and the data survived (verified by a marker row) —
+  recovered in 13s with zero downtime.
+- **The benchmark axis is managed-vs-self-hosted state.** ECS offloads the DB to
+  RDS (nothing to kill, AWS owns HA); EKS self-hosts it and we proved it heals.
+  This is the key input to the Phase 6 recommendation.
 - Health checks are only as good as the tool they call — `wget` in a wget-less image
   silently fails every probe. Match the probe to the image.
-- **Still to do (EKS half):** repeat with `kubectl delete pod` after Phase 4, and
-  compare ECS desired-count reconciliation vs Kubernetes ReplicaSet reconciliation.

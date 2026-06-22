@@ -1,0 +1,4 @@
+# backend media + static PVCs: hostpath -> gp3 (EBS CSI dynamic provisioning).
+- op: replace
+  path: /spec/storageClassName
+  value: gp3

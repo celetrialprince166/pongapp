@@ -1,0 +1,44 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: table-tennis-ingress
+  namespace: table-tennis
+  labels:
+    app: table-tennis
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  ingressClassName: alb
+  rules:
+    # No host pinned: the app is reached via the ALB DNS name.
+    # Same path routing as the nginx ingress; first match wins (most specific first).
+    - http:
+        paths:
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          # NOTE: no /djadmin rule here. /djadmin must flow through the frontend
+          # nginx, which rewrites /djadmin/ -> /admin/ before proxying to the
+          # backend. Routing /djadmin straight to the backend (which only serves
+          # /admin/) returns 404. So it falls through to the catch-all "/" below.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

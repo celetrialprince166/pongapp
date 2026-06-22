@@ -13,6 +13,12 @@ resource "aws_ecr_repository" "this" {
   }
 
   tags = { Name = "${var.project}-${each.value}" }
+
+  # The EKS root (envs/prod-eks) consumes these repos read-only via a data source.
+  # Guard against an ECS-root `terraform destroy` wiping the images both platforms share.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # Retain the most recent N images; expire older to control storage cost.

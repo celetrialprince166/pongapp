@@ -1,0 +1,17 @@
+# Force the backend to a single replica on EKS.
+#
+# WHY: the backend mounts the media + static PVCs (ReadWriteOnce, gp3/EBS). An EBS
+# volume can only attach to one node at a time, so a 2nd replica scheduled on
+# another node wedges in ContainerCreating with a Multi-Attach error. One replica
+# is the minimal safe fix.
+#
+# PARITY / FUTURE: to restore HA (replicas > 1) without RWO contention, either
+# flip the app's existing USE_S3 path so media/static live in S3 (no PVC at all),
+# or back the PVCs with EFS (ReadWriteMany) via the EFS CSI driver. Tracked as the
+# parity-preserving follow-up; ECS runs backend with desired_count 2 behind Cloud Map.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1

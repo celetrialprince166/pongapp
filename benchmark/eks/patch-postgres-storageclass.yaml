@@ -1,0 +1,7 @@
+# volumeClaimTemplates is a list; target the first (and only) template's
+# storageClassName: hostpath -> gp3-retain with a JSON6902 replace.
+# gp3-retain (reclaimPolicy: Retain) keeps the DB EBS volume on teardown so a
+# `kubectl delete -k` does not wipe the database. Manual cleanup at teardown.
+- op: replace
+  path: /spec/volumeClaimTemplates/0/spec/storageClassName
+  value: gp3-retain

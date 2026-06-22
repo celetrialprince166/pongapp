@@ -5,11 +5,16 @@
 #   private_data  -> RDS + ElastiCache
 # ---------------------------------------------------------------------------
 
+locals {
+  # EKS uses this tag to discover the VPC/subnets it may manage (LB controller, etc.).
+  cluster_shared_tag = { "kubernetes.io/cluster/${var.cluster_name}" = "shared" }
+}
+
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags                 = { Name = "${var.name_prefix}-vpc" }
+  tags                 = merge({ Name = "${var.name_prefix}-vpc" }, local.cluster_shared_tag)
 }
 
 resource "aws_internet_gateway" "this" {
@@ -24,7 +29,12 @@ resource "aws_subnet" "public" {
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.azs[count.index]
   map_public_ip_on_launch = true
-  tags                    = { Name = "${var.name_prefix}-public-${var.azs[count.index]}", Tier = "public" }
+  # kubernetes.io/role/elb = "1" -> AWS LB Controller places internet-facing ALBs here.
+  tags = merge({
+    Name                     = "${var.name_prefix}-public-${var.azs[count.index]}"
+    Tier                     = "public"
+    "kubernetes.io/role/elb" = "1"
+  }, local.cluster_shared_tag)
 }
 
 resource "aws_subnet" "private_app" {
@@ -32,7 +42,12 @@ resource "aws_subnet" "private_app" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = var.private_app_subnet_cidrs[count.index]
   availability_zone = var.azs[count.index]
-  tags              = { Name = "${var.name_prefix}-app-${var.azs[count.index]}", Tier = "private-app" }
+  # internal-elb tag -> internal ALBs/NLBs here; EKS nodes also run in these subnets.
+  tags = merge({
+    Name                              = "${var.name_prefix}-app-${var.azs[count.index]}"
+    Tier                              = "private-app"
+    "kubernetes.io/role/internal-elb" = "1"
+  }, local.cluster_shared_tag)
 }
 
 resource "aws_subnet" "private_data" {
@@ -40,7 +55,10 @@ resource "aws_subnet" "private_data" {
   vpc_id            = aws_vpc.this.id
   cidr_block        = var.private_data_subnet_cidrs[count.index]
   availability_zone = var.azs[count.index]
-  tags              = { Name = "${var.name_prefix}-data-${var.azs[count.index]}", Tier = "private-data" }
+  tags = merge({
+    Name = "${var.name_prefix}-data-${var.azs[count.index]}"
+    Tier = "private-data"
+  }, local.cluster_shared_tag)
 }
 
 # ---- NAT (single, in first public subnet) ----

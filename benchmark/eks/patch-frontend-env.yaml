@@ -1,0 +1,22 @@
+# Frontend backend-resolution env. BACKEND_HOST/PORT point at the in-cluster
+# backend Service. BACKEND_RESOLVER is the CoreDNS ClusterIP, which is not known
+# until the cluster is up — left as a placeholder and patched at deploy time:
+#   CLUSTER_DNS=$(kubectl -n kube-system get svc kube-dns -o jsonpath='{.spec.clusterIP}')
+#   kubectl -n table-tennis set env deployment/frontend BACKEND_RESOLVER=$CLUSTER_DNS
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: table-tennis
+spec:
+  template:
+    spec:
+      containers:
+        - name: frontend
+          env:
+            - name: BACKEND_HOST
+              value: backend
+            - name: BACKEND_PORT
+              value: "8000"
+            - name: BACKEND_RESOLVER
+              value: __CLUSTER_DNS__ # set to CoreDNS (kube-dns) ClusterIP at deploy time

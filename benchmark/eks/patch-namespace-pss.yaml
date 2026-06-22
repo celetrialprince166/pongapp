@@ -1,0 +1,14 @@
+# The base k8s/namespace.yaml enforces Pod Security "restricted". The frontend
+# uses the official nginx image (runs master as root, binds :80) which is not
+# restricted-compliant without switching to nginx-unprivileged. ECS Fargate ran
+# the same image with no PSS, so for ECS<->EKS parity we relax ENFORCE to
+# baseline (still blocks privileged/hostNamespace/hostPath). audit+warn stay at
+# restricted so the frontend's deviation is still surfaced in events.
+# Proper hardening (future): rebuild frontend on nginx-unprivileged :8080 +
+# restricted securityContext, then drop this patch.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: table-tennis
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
